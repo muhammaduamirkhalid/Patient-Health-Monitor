@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Patient Health Monitor</title>
 
-  <!-- SUPABASE CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
     * {
       margin: 0;
@@ -263,12 +260,8 @@
         </button>
 
         <button type="button" class="secondary-btn" onclick="openMedicinePage()">
-          Medicine Database Manager
+          Medicine Change Log
         </button>
-
-        <div id="medicineBaseInfo" style="margin-top:15px;padding:12px;border-radius:12px;background:#eff6ff;color:#1e3a8a;font-size:14px;">
-          Active Medicine Base: <strong id="activeMedicineBase">Medicine Base 1</strong>
-        </div>
 
       </form>
 
@@ -289,18 +282,67 @@
   </div>
 
 <script>
+// ======================================================
+// 🔥 SUPABASE LAYER (ALL DATABASE CODE IN ONE PLACE)
+// ======================================================
 
-  // =============================
-  // SUPABASE CONFIGURATION
-  // =============================
+const SUPABASE_URL = "YOUR_URL_HERE";
+const SUPABASE_ANON_KEY = "YOUR_KEY_HERE";
 
-  // REPLACE THESE WITH YOUR ACTUAL VALUES
-  const SUPABASE_URL = ('yvcbuzjryivboukwalyc');
-  const SUPABASE_ANON_KEY = ('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2Y2J1empyeWl2Ym91a3dhbHljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDYxNDAsImV4cCI6MjA5NDc4MjE0MH0.1R4XTQhzKUgkbDDLegKyjMLM-JVTk7ScSjvD16m3gWM');
+let supabaseClient = null;
 
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// INIT ONLY ONCE
+function initSupabase() {
+  try {
+    if (!SUPABASE_URL.includes("http")) return;
+
+    supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+    console.log("Supabase connected");
+  } catch (err) {
+    console.log("Supabase init failed:", err);
+  }
+}
+
+initSupabase();
+
+// =============================
+// SAVE PATIENT READING
+// =============================
+function saveReadingToDB(data) {
+  if (!supabaseClient) return;
+
+  supabaseClient
+    .from("patient_readings")
+    .insert([data])
+    .then(({ error }) => {
+      if (error) console.log("DB Error:", error);
+    });
+}
 
 
+// =============================
+// SAVE MEDICINE BASE
+// =============================
+function saveMedicineBaseToDB(baseName, medicines) {
+  if (!supabaseClient) return;
+
+  supabaseClient
+    .from("medicine_bases")
+    .insert([
+      {
+        base_name: baseName,
+        medicines: medicines,
+        changed_by: "user"
+      }
+    ])
+    .then(({ error }) => {
+      if (error) console.log("Medicine DB Error:", error);
+    });
+}
   // =============================
   // DATE & TIME
   // =============================
@@ -321,28 +363,6 @@
 
   updateDateTime();
   setInterval(updateDateTime, 1000);
-
-
-  // =============================
-  // INITIALIZE MEDICINE BASE
-  // =============================
-
-  if (!localStorage.getItem('medicineBaseCounter')) {
-    localStorage.setItem('medicineBaseCounter', '1');
-  }
-
-  if (!localStorage.getItem('activeMedicineBase')) {
-    localStorage.setItem('activeMedicineBase', 'Medicine Base 1');
-  }
-
-  updateMedicineBaseUI();
-
-  function updateMedicineBaseUI() {
-
-    const currentBase = localStorage.getItem('activeMedicineBase');
-
-    document.getElementById('activeMedicineBase').innerText = currentBase;
-  }
 
 
   // =============================
@@ -380,10 +400,6 @@
     const symptoms = document.getElementById('symptoms').value;
     const notes = document.getElementById('notes').value;
 
-    const currentMedicineBase = localStorage.getItem('activeMedicineBase') || 'Medicine Base 1';
-
-    const activeMedicines = JSON.parse(localStorage.getItem('activeMedicines')) || [];
-
     const data = {
       timestamp: new Date().toISOString(),
       pulse,
@@ -392,9 +408,7 @@
       spo2,
       symptoms,
       context: selectedContext,
-      notes,
-      medicineBase: currentMedicineBase,
-      medicines: activeMedicines
+      notes
     };
 
     console.log('Patient Reading:', data);
@@ -405,14 +419,7 @@
     // ========================================
 
 
-    // =============================
-    // SAVE TO SUPABASE DATABASE
-    // =============================
-
-    saveReadingToSupabase(data);
-
-
-    // Optional Local Backup
+    // Local temporary storage
     let readings = JSON.parse(localStorage.getItem('patientReadings')) || [];
 
     readings.push(data);
@@ -438,74 +445,6 @@
     document.getElementById('healthForm').reset();
 
   });
-
-
-  // =============================
-  // SAVE READING TO SUPABASE
-  // =============================
-
-  async function saveReadingToSupabase(data) {
-
-    try {
-
-      const { error } = await supabaseClient
-        .from('patient_readings')
-        .insert([
-          {
-            pulse: data.pulse,
-            systolic: data.systolic,
-            diastolic: data.diastolic,
-            spo2: data.spo2,
-            symptoms: data.symptoms,
-            context: data.context,
-            notes: data.notes,
-            medicine_base: data.medicineBase
-          }
-        ]);
-
-      if (error) {
-        console.error('Supabase Insert Error:', error);
-        alert('Database connection failed.');
-      } else {
-        console.log('Reading saved to Supabase successfully.');
-      }
-
-    } catch (err) {
-
-      console.error('Unexpected Error:', err);
-    }
-  }
-
-
-  // =============================
-  // SAVE MEDICINE BASE TO SUPABASE
-  // =============================
-
-  async function saveMedicineBaseToSupabase(baseName, medicines) {
-
-    try {
-
-      const { error } = await supabaseClient
-        .from('medicine_bases')
-        .insert([
-          {
-            base_name: baseName,
-            medicines: medicines,
-            changed_by: 'Family'
-          }
-        ]);
-
-      if (error) {
-        console.error('Medicine Base Error:', error);
-      } else {
-        console.log('Medicine Base Saved Successfully');
-      }
-
-    } catch (err) {
-
-      console.error('Unexpected Error:', err);
-    }
-  }
 
 
   // =============================
@@ -549,82 +488,11 @@
 
 
   // =============================
-  // MEDICINE CHANGE LOG MODAL
+  // MEDICINE PAGE PLACEHOLDER
   // =============================
 
   function openMedicinePage() {
-
-    const currentMedicines = JSON.parse(localStorage.getItem('activeMedicines')) || [];
-
-    const currentList = currentMedicines.length > 0
-      ? currentMedicines.join(''): 'No medicines added yet.';
-
-    const medicineInput = prompt(
-`MEDICINE DATABASE MANAGER
-
-Current Active Medicines:
---------------------------
-${currentList}
-
-Enter COMPLETE updated medicine list.
-
-One medicine per line.
-
-Example:
-Bisoprolol 2.5mg
-Aspirin 75mg
-Lasix 40mg`
-    );
-
-    if (!medicineInput || medicineInput.trim() === '') {
-      return;
-    }
-
-    const updatedMedicines = medicineInput
-      .split('
-')
-      .map(med => med.trim())
-      .filter(med => med !== '');
-
-
-    // CREATE NEW MEDICINE BASE
-    let counter = parseInt(localStorage.getItem('medicineBaseCounter'));
-
-    counter++;
-
-    localStorage.setItem('medicineBaseCounter', counter.toString());
-
-    const newBase = `Medicine Base ${counter}`;
-
-    localStorage.setItem('activeMedicineBase', newBase);
-
-    localStorage.setItem('activeMedicines', JSON.stringify(updatedMedicines));
-
-
-    // SAVE MEDICINE HISTORY
-    const medicineHistory = JSON.parse(localStorage.getItem('medicineHistory')) || [];
-
-    medicineHistory.push({
-      base: newBase,
-      timestamp: new Date().toISOString(),
-      medicines: updatedMedicines
-    });
-
-    localStorage.setItem('medicineHistory', JSON.stringify(medicineHistory));
-
-
-    // SAVE TO SUPABASE
-    saveMedicineBaseToSupabase(newBase, updatedMedicines);
-
-
-    updateMedicineBaseUI();
-
-    alert(`${newBase} created successfully.`);
-
-    console.log('Medicine Base Updated:', {
-      base: newBase,
-      medicines: updatedMedicines
-    });
+    alert('Medicine Change Log page will be connected next.');
   }
 
 </script>
