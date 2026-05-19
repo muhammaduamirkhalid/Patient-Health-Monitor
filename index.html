@@ -557,9 +557,7 @@
     const currentMedicines = JSON.parse(localStorage.getItem('activeMedicines')) || [];
 
     const currentList = currentMedicines.length > 0
-      ? currentMedicines.join('
-')
-      : 'No medicines added yet.';
+      ? currentMedicines.join(''): 'No medicines added yet.';
 
     const medicineInput = prompt(
 `MEDICINE DATABASE MANAGER
