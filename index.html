@@ -324,7 +324,7 @@ function saveReadingToDB(data) {
     console.log("SUPABASE FULL RESPONSE:", res);
   })
   .catch((err) => {
-    console.log("SUPABASE ERROR:", err);
+    console.log("SUPABASE ERROR FULL:", JSON.stringify(err, null, 2));
   });
 }
 
