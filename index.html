@@ -317,13 +317,15 @@ initSupabase();
 function saveReadingToDB(data) {
   if (!supabaseClient) return;
 
-  supabaseClient
-    .from("patient_readings")
-    .insert([data])
-    .then(({ error }) => {
-      if (error) console.log("DB Error:", error);
-    });
-}
+ supabaseClient
+  .from("patient_readings")
+  .insert([data])
+  .then((res) => {
+    console.log("SUPABASE FULL RESPONSE:", res);
+  })
+  .catch((err) => {
+    console.log("SUPABASE ERROR:", err);
+  });
 
 
 // =============================
