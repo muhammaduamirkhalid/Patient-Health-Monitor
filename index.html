@@ -344,10 +344,15 @@ function saveMedicineBaseToDB(baseName, medicines) {
     }])
     .then(res => {
       console.log("Medicine saved:", res);
-    })
-    .catch(err => {
-      console.log("Medicine error:", err);
-    });
+    if (!res.error) {
+
+  medicineBaseCounter++;
+
+  localStorage.setItem(
+    "medicineBaseCounter",
+    medicineBaseCounter
+  );
+ 
 }
   // =============================
   // DATE & TIME
@@ -532,11 +537,7 @@ let medicineBaseCounter = 1;
 
   saveMedicineBaseToDB(baseName, medicines);
 
-  // ✅ increment counter AFTER successful entry
-  medicineBaseCounter++;
 
-  // save it so next reload continues correctly
-  localStorage.setItem("medicineBaseCounter", medicineBaseCounter);
 }
 
 </script>
