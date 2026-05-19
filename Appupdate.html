@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Patient Health Monitor</title>
 
+  <!-- SUPABASE CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     * {
       margin: 0;
@@ -288,6 +291,17 @@
 <script>
 
   // =============================
+  // SUPABASE CONFIGURATION
+  // =============================
+
+  // REPLACE THESE WITH YOUR ACTUAL VALUES
+  const SUPABASE_URL = 'yvcbuzjryivboukwalyc';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2Y2J1empyeWl2Ym91a3dhbHljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDYxNDAsImV4cCI6MjA5NDc4MjE0MH0.1R4XTQhzKUgkbDDLegKyjMLM-JVTk7ScSjvD16m3gWM;
+
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+
+  // =============================
   // DATE & TIME
   // =============================
 
@@ -391,7 +405,14 @@
     // ========================================
 
 
-    // Local temporary storage
+    // =============================
+    // SAVE TO SUPABASE DATABASE
+    // =============================
+
+    saveReadingToSupabase(data);
+
+
+    // Optional Local Backup
     let readings = JSON.parse(localStorage.getItem('patientReadings')) || [];
 
     readings.push(data);
@@ -417,6 +438,74 @@
     document.getElementById('healthForm').reset();
 
   });
+
+
+  // =============================
+  // SAVE READING TO SUPABASE
+  // =============================
+
+  async function saveReadingToSupabase(data) {
+
+    try {
+
+      const { error } = await supabaseClient
+        .from('patient_readings')
+        .insert([
+          {
+            pulse: data.pulse,
+            systolic: data.systolic,
+            diastolic: data.diastolic,
+            spo2: data.spo2,
+            symptoms: data.symptoms,
+            context: data.context,
+            notes: data.notes,
+            medicine_base: data.medicineBase
+          }
+        ]);
+
+      if (error) {
+        console.error('Supabase Insert Error:', error);
+        alert('Database connection failed.');
+      } else {
+        console.log('Reading saved to Supabase successfully.');
+      }
+
+    } catch (err) {
+
+      console.error('Unexpected Error:', err);
+    }
+  }
+
+
+  // =============================
+  // SAVE MEDICINE BASE TO SUPABASE
+  // =============================
+
+  async function saveMedicineBaseToSupabase(baseName, medicines) {
+
+    try {
+
+      const { error } = await supabaseClient
+        .from('medicine_bases')
+        .insert([
+          {
+            base_name: baseName,
+            medicines: medicines,
+            changed_by: 'Family'
+          }
+        ]);
+
+      if (error) {
+        console.error('Medicine Base Error:', error);
+      } else {
+        console.log('Medicine Base Saved Successfully');
+      }
+
+    } catch (err) {
+
+      console.error('Unexpected Error:', err);
+    }
+  }
 
 
   // =============================
@@ -468,7 +557,8 @@
     const currentMedicines = JSON.parse(localStorage.getItem('activeMedicines')) || [];
 
     const currentList = currentMedicines.length > 0
-      ? currentMedicines.join('\n')
+      ? currentMedicines.join('
+')
       : 'No medicines added yet.';
 
     const medicineInput = prompt(
@@ -493,7 +583,8 @@ Lasix 40mg`
     }
 
     const updatedMedicines = medicineInput
-      .split('\n')
+      .split('
+')
       .map(med => med.trim())
       .filter(med => med !== '');
 
@@ -522,6 +613,10 @@ Lasix 40mg`
     });
 
     localStorage.setItem('medicineHistory', JSON.stringify(medicineHistory));
+
+
+    // SAVE TO SUPABASE
+    saveMedicineBaseToSupabase(newBase, updatedMedicines);
 
 
     updateMedicineBaseUI();
