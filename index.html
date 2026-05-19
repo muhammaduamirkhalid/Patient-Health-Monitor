@@ -352,8 +352,15 @@ function saveMedicineBaseToDB(baseName, medicines) {
     "medicineBaseCounter",
     medicineBaseCounter
   );
- 
+ }
+
+  })
+  .catch(err => {
+    console.log("Medicine error:", err);
+  });
+
 }
+
   // =============================
   // DATE & TIME
   // =============================
