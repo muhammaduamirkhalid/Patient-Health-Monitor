@@ -332,19 +332,21 @@ function saveReadingToDB(data) {
 // SAVE MEDICINE BASE
 // =============================
 function saveMedicineBaseToDB(baseName, medicines) {
-  if (!supabaseClient) return;
+
+  console.log("Saving:", baseName);
 
   supabaseClient
     .from("medicine_bases")
-    .insert([
-      {
-        base_name: baseName,
-        medicines: medicines,
-        changed_by: "user"
-      }
-    ])
-    .then(({ error }) => {
-      if (error) console.log("Medicine DB Error:", error);
+    .insert([{
+      base_name: baseName,
+      medicines: JSON.stringify(medicines), // safer for Supabase
+      changed_by: "user"
+    }])
+    .then(res => {
+      console.log("Medicine saved:", res);
+    })
+    .catch(err => {
+      console.log("Medicine error:", err);
     });
 }
   // =============================
@@ -497,6 +499,45 @@ saveReadingToDB(data);
   function openMedicinePage() {
     alert('Medicine Change Log page will be connected next.');
   }
+
+  // =============================
+// 💊 MEDICINE BASE COUNTER
+// =============================
+
+let medicineBaseCounter = 1;
+  function loadMedicineBaseCounter() {
+  const saved = localStorage.getItem("medicineBaseCounter");
+
+  if (saved) {
+    medicineBaseCounter = parseInt(saved);
+  }
+}
+
+  loadMedicineBaseCounter();
+
+  function openMedicinePage() {
+
+  const baseName = "Medicine Base - " + medicineBaseCounter;
+
+  const medicinesInput = prompt(
+    baseName + "\nEnter medicines separated by comma"
+  );
+
+  if (!medicinesInput) {
+    alert("Medicine entry cancelled");
+    return;
+  }
+
+  const medicines = medicinesInput.split(",").map(m => m.trim());
+
+  saveMedicineBaseToDB(baseName, medicines);
+
+  // ✅ increment counter AFTER successful entry
+  medicineBaseCounter++;
+
+  // save it so next reload continues correctly
+  localStorage.setItem("medicineBaseCounter", medicineBaseCounter);
+}
 
 </script>
 
