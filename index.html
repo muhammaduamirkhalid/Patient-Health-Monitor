@@ -420,11 +420,11 @@ function saveMedicineBaseToDB(baseName, medicines) {
 
 
     // Local temporary storage
-    let readings = JSON.parse(localStorage.getItem('patientReadings')) || [];
+    let readings = JSON.parse(localStorage.getItem('patient_Readings')) || [];
 
     readings.push(data);
 
-    localStorage.setItem('patientReadings', JSON.stringify(readings));
+    localStorage.setItem('patient_Readings', JSON.stringify(readings));
 
 
     // Success Message
