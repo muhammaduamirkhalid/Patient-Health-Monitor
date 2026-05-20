@@ -184,4 +184,26 @@ elif after_score < before_score:
 else:
     st.info("🟡 No significant change detected")
 
+# Medicine Base addition from supabase
 
+med_res = supabase.table("medicine_bases").select("*").execute()
+med_df = pd.DataFrame(med_res.data)
+
+# clean the time stamp
+df["created_at"] = pd.to_datetime(df["created_at"])
+med_df["created_at"] = pd.to_datetime(med_df["created_at"])
+
+# finding last medicine change
+st.subheader("💊 Real Medicine Timeline")
+
+if not med_df.empty:
+    last_change = med_df["created_at"].max()
+    st.write("Last Medicine Change:", last_change)
+
+# Split data based on real time
+
+before = df[df["created_at"] < last_change]
+after = df[df["created_at"] >= last_change]
+
+before_score = before["health_score"].mean()
+after_score = after["health_score"].mean()
