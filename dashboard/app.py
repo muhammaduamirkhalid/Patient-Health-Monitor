@@ -229,4 +229,112 @@ for i in range(len(med_df)):
 
         st.write(f"Base {i+1} Avg Score:", round(avg_score, 1))
 
+# ======================================================
+# 💊 MEDICINE BASE VISUAL ANALYSIS (OPTION A - FULL BLOCK)
+# ======================================================
 
+st.header("💊 Medicine Base Impact Visualization")
+
+# Ensure data is sorted
+df = df.sort_values("created_at")
+
+# Load medicine base data from Supabase
+med_res = supabase.table("medicine_bases").select("*").execute()
+med_df = pd.DataFrame(med_res.data)
+
+# If no medicine data exists
+if med_df.empty:
+    st.warning("No medicine base data found.")
+else:
+
+    # Convert timestamps
+    med_df["created_at"] = pd.to_datetime(med_df["created_at"])
+    df["created_at"] = pd.to_datetime(df["created_at"])
+
+    # Sort medicine bases
+    med_df = med_df.sort_values("created_at")
+
+    # ======================================================
+    # 📍 SHOW MEDICINE BASE EVENTS ON TIMELINE
+    # ======================================================
+
+    st.subheader("📍 Medicine Change Timeline")
+
+    for i in range(len(med_df)):
+        st.write(
+            f"**Base {i+1}** → {med_df.iloc[i]['created_at']}"
+        )
+
+    # ======================================================
+    # 📊 VISUAL SEGMENTATION BY MEDICINE BASE
+    # ======================================================
+
+    st.subheader("📊 Health Score by Medicine Phase")
+
+    for i in range(len(med_df)):
+
+        start_time = med_df.iloc[i]["created_at"]
+
+        if i < len(med_df) - 1:
+            end_time = med_df.iloc[i + 1]["created_at"]
+        else:
+            end_time = df["created_at"].max()
+
+        segment = df[
+            (df["created_at"] >= start_time) &
+            (df["created_at"] < end_time)
+        ]
+
+        if not segment.empty:
+
+            avg_score = segment["health_score"].mean()
+
+            st.metric(
+                label=f"Medicine Base {i+1} Avg Health Score",
+                value=round(avg_score, 2)
+            )
+
+    # ======================================================
+    # 📈 VISUAL OVERLAY ON HEALTH SCORE TREND
+    # ======================================================
+
+    st.subheader("📈 Health Score Timeline with Medicine Events")
+
+    chart_df = df.set_index("created_at")[["health_score"]]
+
+    st.line_chart(chart_df)
+
+    # ======================================================
+    # 🧠 INTERPRETATION SUMMARY
+    # ======================================================
+
+    st.subheader("🧠 Treatment Interpretation")
+
+    scores = []
+
+    for i in range(len(med_df)):
+
+        start_time = med_df.iloc[i]["created_at"]
+
+        if i < len(med_df) - 1:
+            end_time = med_df.iloc[i + 1]["created_at"]
+        else:
+            end_time = df["created_at"].max()
+
+        segment = df[
+            (df["created_at"] >= start_time) &
+            (df["created_at"] < end_time)
+        ]
+
+        if not segment.empty:
+            scores.append(segment["health_score"].mean())
+
+    if len(scores) >= 2:
+
+        if scores[-1] > scores[0]:
+            st.success("📈 Overall improvement across medicine bases")
+        elif scores[-1] < scores[0]:
+            st.error("📉 Overall deterioration across medicine bases")
+        else:
+            st.info("➖ No major change across treatment phases")
+            
