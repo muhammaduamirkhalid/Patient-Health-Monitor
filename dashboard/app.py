@@ -509,6 +509,8 @@ Health Score: {latest['health_score']}
 
 Baseline Pulse: {baseline['pulse']}
 Baseline SpO2: {baseline['spo2']}
+Baseline Systolic: {baseline['systolic']}
+Baseline diastolic: {baseline['diastolic']}
 """
 
     return report
