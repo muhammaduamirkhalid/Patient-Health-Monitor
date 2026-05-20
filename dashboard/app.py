@@ -136,10 +136,12 @@ st.line_chart(df.set_index("created_at")["health_score"])
 
 st.subheader("📈 Health Trend Analysis")
 
-if len(df) > 5:
+if len(df) >= 2:
 
-    recent = df["health_score"].tail(5).mean()
-    previous = df["health_score"].head(5).mean()
+    df_clean = df.dropna(subset=["health_score"])
+
+    recent = df_clean["health_score"].tail(5).mean()
+    previous = df_clean["health_score"].head(5).mean()
 
     if recent > previous:
         st.success("📈 Patient condition is IMPROVING")
@@ -148,11 +150,13 @@ if len(df) > 5:
     else:
         st.info("➖ Patient condition is STABLE")
 
-# stabilty score
-st.subheader("📊 Stability Index")
+    st.subheader("📊 Stability Index")
 
-stability = 100 - abs(recent - previous)
+    stability = 100 - abs(recent - previous)
+    stability = max(min(stability, 100), 0)
 
-st.metric("Stability Score", round(stability, 1))
+    st.metric("Stability Score", round(stability, 1))
 
-
+else:
+    st.warning("Not enough data for trend analysis")
+    
