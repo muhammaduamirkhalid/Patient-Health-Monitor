@@ -490,4 +490,30 @@ elif risk_score >= 2:
     st.warning("🟠 MODERATE RISK")
 else:
     st.success("🟢 LOW RISK")
-    
+
+# AUTOMATED REPORT GENERATION
+import datetime
+
+def generate_daily_report():
+    latest = df.iloc[-1]
+
+    report = f"""
+Patient Daily Health Report
+Date: {datetime.datetime.now()}
+
+Pulse: {latest['pulse']}
+SpO2: {latest['spo2']}
+BP: {latest['systolic']}/{latest['diastolic']}
+
+Health Score: {latest['health_score']}
+
+Baseline Pulse: {baseline['pulse']}
+Baseline SpO2: {baseline['spo2']}
+"""
+
+    return report
+
+
+st.subheader("📄 Daily Report Preview")
+st.text(generate_daily_report())
+
