@@ -159,4 +159,29 @@ if len(df) >= 2:
 
 else:
     st.warning("Not enough data for trend analysis")
-    
+
+# Treatment Impact
+
+st.subheader("💊 Treatment Impact (Basic Model)")
+
+mid_point = len(df) // 2
+
+before = df.iloc[:mid_point]
+after = df.iloc[mid_point:]
+
+# compairing the health score
+
+before_score = before["health_score"].mean()
+after_score = after["health_score"].mean()
+
+st.metric("Before Treatment Score", round(before_score, 1))
+st.metric("After Treatment Score", round(after_score, 1))
+# Treatment Impact Code
+if after_score > before_score:
+    st.success("🟢 Patient condition improved after treatment")
+elif after_score < before_score:
+    st.error("🔴 Patient condition worsened after treatment")
+else:
+    st.info("🟡 No significant change detected")
+
+
