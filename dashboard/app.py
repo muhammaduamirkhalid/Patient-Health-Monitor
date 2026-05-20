@@ -37,9 +37,8 @@ df = pd.DataFrame(data)
 st.subheader("Raw Data")
 st.dataframe(df)
 df = df.sort_values("created_at")
-# ==================================================
+
 # Graph trends
-# ==================================================
 st.subheader("Pulse Over Time")
 
 st.line_chart(df.set_index("created_at")["pulse"])
@@ -59,3 +58,26 @@ st.line_chart(df.set_index("created_at")["spo2"])
 st.subheader("📄 Patient Readings")
 
 st.dataframe(df)
+# ==================================================
+st.subheader("📊 Basic Health Summary")
+# Add metrics
+st.metric("Avg Pulse", round(df["pulse"].mean(), 1))
+st.metric("Avg SpO2", round(df["spo2"].mean(), 1))
+# Add blood Pressure Summary
+st.metric("Avg Systolic", round(df["systolic"].mean(), 1))
+st.metric("Avg Diastolic", round(df["diastolic"].mean(), 1))
+
+# ==================================================
+# Alerts
+st.subheader("⚠️ Basic Alerts")
+# Alert Rules
+if df["pulse"].mean() > 100:
+    st.error("High average pulse detected")
+
+if df["spo2"].mean() < 94:
+    st.warning("Low oxygen levels trend detected")
+
+if df["systolic"].mean() > 140:
+    st.error("High blood pressure trend detected")
+
+
