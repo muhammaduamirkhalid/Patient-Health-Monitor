@@ -305,12 +305,32 @@ else:
     st.line_chart(chart_df)
 
     # ======================================================
-    # 🧠 INTERPRETATION SUMMARY
+# 🧠 OPTION B: MEDICINE EFFECTIVENESS INTELLIGENCE LAYER
+# ======================================================
+
+st.header("🧠 Medicine Effectiveness Analysis")
+
+# Ensure clean sorting
+df = df.sort_values("created_at")
+
+med_res = supabase.table("medicine_bases").select("*").execute()
+med_df = pd.DataFrame(med_res.data)
+
+if med_df.empty:
+    st.warning("No medicine base data available for analysis.")
+
+else:
+
+    med_df["created_at"] = pd.to_datetime(med_df["created_at"])
+    df["created_at"] = pd.to_datetime(df["created_at"])
+
+    med_df = med_df.sort_values("created_at")
+
+    # ======================================================
+    # 📊 STEP 1: CALCULATE EFFECTIVENESS PER MEDICINE BASE
     # ======================================================
 
-    st.subheader("🧠 Treatment Interpretation")
-
-    scores = []
+    effectiveness_scores = []
 
     for i in range(len(med_df)):
 
@@ -327,14 +347,78 @@ else:
         ]
 
         if not segment.empty:
-            scores.append(segment["health_score"].mean())
 
-    if len(scores) >= 2:
+            avg_score = segment["health_score"].mean()
 
-        if scores[-1] > scores[0]:
-            st.success("📈 Overall improvement across medicine bases")
-        elif scores[-1] < scores[0]:
-            st.error("📉 Overall deterioration across medicine bases")
+            effectiveness_scores.append({
+                "base": f"Medicine Base {i+1}",
+                "score": avg_score
+            })
+
+    # ======================================================
+    # 📈 STEP 2: DISPLAY EFFECTIVENESS TABLE
+    # ======================================================
+
+    eff_df = pd.DataFrame(effectiveness_scores)
+
+    if not eff_df.empty:
+
+        st.subheader("📊 Effectiveness Score per Medicine Base")
+
+        st.dataframe(eff_df)
+
+        # ======================================================
+        # 🏆 STEP 3: FIND BEST & WORST BASE
+        # ======================================================
+
+        best = eff_df.loc[eff_df["score"].idxmax()]
+        worst = eff_df.loc[eff_df["score"].idxmin()]
+
+        st.subheader("🏆 Key Insights")
+
+        st.success(
+            f"Best Performing Treatment: {best['base']} "
+            f"(Score: {round(best['score'], 2)})"
+        )
+
+        st.error(
+            f"Worst Performing Treatment: {worst['base']} "
+            f"(Score: {round(worst['score'], 2)})"
+        )
+
+        # ======================================================
+        # 📈 STEP 4: VISUAL TREND OF MEDICINE EFFECTIVENESS
+        # ======================================================
+
+        st.subheader("📈 Treatment Effectiveness Trend")
+
+        st.line_chart(
+            eff_df.set_index("base")["score"]
+        )
+
+        # ======================================================
+        # 🧠 STEP 5: AUTOMATIC INTERPRETATION
+        # ======================================================
+
+        st.subheader("🧠 AI-Like Insight Summary")
+
+        if best["score"] > worst["score"] + 10:
+
+            st.success(
+                "Clear response difference detected between medicine bases. "
+                "Treatment adjustments are significantly impacting patient health."
+            )
+
+        elif abs(best["score"] - worst["score"]) <= 10:
+
+            st.info(
+                "Minimal variation between medicine bases. "
+                "Patient response is relatively stable across treatments."
+            )
+
         else:
-            st.info("➖ No major change across treatment phases")
-            
+
+            st.warning(
+                "Moderate variation detected. Further monitoring required."
+            )
+
