@@ -207,3 +207,26 @@ after = df[df["created_at"] >= last_change]
 
 before_score = before["health_score"].mean()
 after_score = after["health_score"].mean()
+
+med_df = med_df.sort_values("created_at")
+st.subheader("💊 Multi-Stage Medicine Impact")
+for i in range(len(med_df)):
+
+    start_time = med_df.iloc[i]["created_at"]
+
+    if i < len(med_df) - 1:
+        end_time = med_df.iloc[i + 1]["created_at"]
+    else:
+        end_time = df["created_at"].max()
+
+    segment = df[
+        (df["created_at"] >= start_time) &
+        (df["created_at"] < end_time)
+    ]
+
+    if not segment.empty:
+        avg_score = segment["health_score"].mean()
+
+        st.write(f"Base {i+1} Avg Score:", round(avg_score, 1))
+
+
