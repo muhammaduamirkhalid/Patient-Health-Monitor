@@ -1,4 +1,10 @@
 import streamlit as st
+import pandas as pd
+from supabase import create_client
+
+# ==================================================
+# PAGE CONFIG
+# ==================================================
 
 st.set_page_config(
     page_title="Patient Health Dashboard",
@@ -7,4 +13,32 @@ st.set_page_config(
 
 st.title("📊 Patient Health Dashboard")
 
-st.write("Dashboard system is running successfully.")
+# ==================================================
+# SUPABASE CONNECTION
+# ==================================================
+
+SUPABASE_URL = "https://yvcbuzjryivboukwalyc.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2Y2J1empyeWl2Ym91a3dhbHljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDYxNDAsImV4cCI6MjA5NDc4MjE0MH0.1R4XTQhzKUgkbDDLegKyjMLM-JVTk7ScSjvD16m3gWM"
+
+supabase = create_client(
+    SUPABASE_URL,
+    SUPABASE_KEY
+)
+
+# ==================================================
+# LOAD PATIENT READINGS
+# ==================================================
+
+response = supabase.table("patient_readings").select("*").execute()
+
+data = response.data
+
+df = pd.DataFrame(data)
+
+# ==================================================
+# SHOW DATA
+# ==================================================
+
+st.subheader("📄 Patient Readings")
+
+st.dataframe(df)
