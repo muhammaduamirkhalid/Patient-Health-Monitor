@@ -34,6 +34,12 @@ response = supabase.table("patient_readings").select("*").execute()
 data = response.data
 
 df = pd.DataFrame(data)
+st.subheader("Raw Data")
+st.dataframe(df)
+df = df.sort_values("created_at")
+st.subheader("Pulse Over Time")
+
+st.line_chart(df.set_index("created_at")["pulse"])
 
 # ==================================================
 # SHOW DATA
