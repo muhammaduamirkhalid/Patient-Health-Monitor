@@ -422,3 +422,72 @@ else:
                 "Moderate variation detected. Further monitoring required."
             )
 
+# PATIENT BASELINE NORMALIZATION
+# ======================================================
+# 🧠 PATIENT BASELINE INTELLIGENCE LAYER
+# ======================================================
+
+st.header("🧠 Advanced Patient Intelligence")
+
+# Clean data
+df = df.sort_values("created_at")
+
+# ======================================================
+# 📊 STEP 1: PATIENT PERSONAL BASELINE
+# ======================================================
+
+baseline = {
+    "pulse": df["pulse"].mean(),
+    "systolic": df["systolic"].mean(),
+    "diastolic": df["diastolic"].mean(),
+    "spo2": df["spo2"].mean()
+}
+
+st.subheader("📊 Patient Baseline (Personal Normal Range)")
+st.write(baseline)
+
+# ANOMALY DETECTION (REAL INTELLIGENCE)
+# ======================================================
+# 🚨 STEP 2: ANOMALY DETECTION
+# ======================================================
+
+st.subheader("🚨 Detected Anomalies")
+
+df["pulse_anomaly"] = abs(df["pulse"] - baseline["pulse"])
+df["spo2_anomaly"] = abs(df["spo2"] - baseline["spo2"])
+
+anomalies = df[
+    (df["pulse_anomaly"] > 20) |
+    (df["spo2_anomaly"] > 3)
+]
+
+st.write("Total Anomalous Events:", len(anomalies))
+st.dataframe(anomalies.tail(10))
+
+# Simple Risk Flag System 
+# ======================================================
+# ⚠️ STEP 3: RISK LEVEL CLASSIFICATION
+# ======================================================
+
+st.subheader("⚠️ Patient Risk Level")
+
+latest = df.iloc[-1]
+
+risk_score = 0
+
+if latest["pulse"] > baseline["pulse"] + 20:
+    risk_score += 1
+
+if latest["spo2"] < baseline["spo2"] - 2:
+    risk_score += 2
+
+if latest["systolic"] > baseline["systolic"] + 15:
+    risk_score += 2
+
+if risk_score >= 4:
+    st.error("🔴 HIGH RISK PATIENT")
+elif risk_score >= 2:
+    st.warning("🟠 MODERATE RISK")
+else:
+    st.success("🟢 LOW RISK")
+    
