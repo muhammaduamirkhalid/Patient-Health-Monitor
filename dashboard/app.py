@@ -80,4 +80,24 @@ if df["spo2"].mean() < 94:
 if df["systolic"].mean() > 140:
     st.error("High blood pressure trend detected")
 
+# Code to detect real abnormal values not averages. 
+st.subheader("⚠️ Real-Time Alerts")
+# high pulse detection 
+high_pulse = df[df["pulse"] > 120]
+
+if not high_pulse.empty:
+    st.error(f"High Pulse Events: {len(high_pulse)}")
+# low oxygen concentration 
+low_spo2 = df[df["spo2"] < 92]
+
+if not low_spo2.empty:
+    st.warning(f"Low SpO2 Events: {len(low_spo2)}")
+
+# high blood pressure detection 
+high_bp = df[(df["systolic"] > 140) | (df["diastolic"] > 90)]
+
+if not high_bp.empty:
+    st.error(f"High BP Events: {len(high_bp)}")
+    
+
 
