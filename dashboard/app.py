@@ -37,10 +37,21 @@ df = pd.DataFrame(data)
 st.subheader("Raw Data")
 st.dataframe(df)
 df = df.sort_values("created_at")
+# ==================================================
+# Graph trends
+# ==================================================
 st.subheader("Pulse Over Time")
 
 st.line_chart(df.set_index("created_at")["pulse"])
 
+st.subheader("Blood Pressure Over Time")
+
+st.line_chart(
+    df.set_index("created_at")[["systolic", "diastolic"]]
+)
+st.subheader("Oxygen Saturation (SpO2)")
+
+st.line_chart(df.set_index("created_at")["spo2"])
 # ==================================================
 # SHOW DATA
 # ==================================================
