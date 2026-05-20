@@ -1,31 +1,46 @@
 # ======================================================
-# 📄 PATIENT DAILY REPORT GENERATOR (STANDALONE)
+# 📊 PATIENT HEALTH REPORT GENERATOR
 # ======================================================
 
-import datetime
+import os
 import pandas as pd
+import requests
 from supabase import create_client
 
-# -------------------------------
-# SUPABASE CONNECTION
-# -------------------------------
-SUPABASE_URL = "https://yvcbuzjryivboukwalyc.supabase.co"
-SUPABASE_KEY = "YOUR_ANON_KEY"
+# ======================================================
+# 🔐 STEP 1: LOAD SECRETS (FROM GITHUB ACTIONS)
+# ======================================================
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 
+# ======================================================
+# 📧 STEP 2: EMAIL CONFIG (CHANGE THIS)
+# 👉 PUT YOUR EMAIL HERE (receiver)
+# ======================================================
+TO_EMAIL = "muhammad.umairkhalid@outlook.com"   # <-- CHANGE THIS
+
+# ======================================================
+# 🔌 CONNECT TO SUPABASE
+# ======================================================
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# -------------------------------
-# LOAD DATA
-# -------------------------------
+# ======================================================
+# 📥 LOAD PATIENT DATA
+# ======================================================
 def load_data():
     res = supabase.table("patient_readings").select("*").execute()
     df = pd.DataFrame(res.data)
+
+    if df.empty:
+        return df
+
     df["created_at"] = pd.to_datetime(df["created_at"])
     return df
 
-# -------------------------------
-# HEALTH SCORE (same logic you used)
-# -------------------------------
+# ======================================================
+# 🧠 SIMPLE HEALTH SCORE (same logic as your dashboard)
+# ======================================================
 def calculate_score(row):
     score = 100
 
@@ -40,15 +55,13 @@ def calculate_score(row):
 
     return max(score, 0)
 
-# -------------------------------
-# GENERATE REPORT
-# -------------------------------
-def generate_report():
-
-    df = load_data()
+# ======================================================
+# 📊 GENERATE REPORT TEXT
+# ======================================================
+def generate_report(df):
 
     if df.empty:
-        return "No data available"
+        return "No patient data available"
 
     df = df.sort_values("created_at")
     df["health_score"] = df.apply(calculate_score, axis=1)
@@ -56,24 +69,53 @@ def generate_report():
     latest = df.iloc[-1]
 
     report = f"""
-========================
-DAILY PATIENT REPORT
-========================
-Date: {datetime.datetime.now()}
+==============================
+DAILY PATIENT HEALTH REPORT
+==============================
 
 Pulse: {latest['pulse']}
 SpO2: {latest['spo2']}
-BP: {latest['systolic']}/{latest['diastolic']}
+Blood Pressure: {latest['systolic']}/{latest['diastolic']}
 
 Health Score: {latest['health_score']}
 
-========================
+==============================
+Generated Automatically
 """
 
     return report
 
-# -------------------------------
-# TEST RUN
-# -------------------------------
+# ======================================================
+# 📧 SEND EMAIL USING RESEND API
+# ======================================================
+def send_email(report_text):
+
+    url = "https://api.resend.com/emails"
+
+    headers = {
+        "Authorization": f"Bearer {RESEND_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "from": "Health Monitor <onboarding@resend.dev>",
+        "to": [TO_EMAIL],
+        "subject": "📊 Daily Patient Health Report",
+        "text": report_text
+    }
+
+    response = requests.post(url, json=data, headers=headers)
+
+    print("Email Status:", response.status_code)
+    print("Response:", response.text)
+
+# ======================================================
+# 🚀 MAIN EXECUTION
+# ======================================================
 if __name__ == "__main__":
-    print(generate_report())
+
+    df = load_data()
+    report = generate_report(df)
+
+    print(report)
+    send_email(report)
