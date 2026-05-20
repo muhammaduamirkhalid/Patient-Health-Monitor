@@ -99,5 +99,37 @@ high_bp = df[(df["systolic"] > 140) | (df["diastolic"] > 90)]
 if not high_bp.empty:
     st.error(f"High BP Events: {len(high_bp)}")
     
+# Patient Health Score
+
+def calculate_health_score(row):
+    score = 100
+
+    # Pulse penalty
+    if row["pulse"] < 60 or row["pulse"] > 100:
+        score -= 20
+
+    # Blood pressure penalty
+    if row["systolic"] > 140 or row["diastolic"] > 90:
+        score -= 25
+
+    # Oxygen penalty
+    if row["spo2"] < 95:
+        score -= 30
+
+    return max(score, 0)
+
+df["health_score"] = df.apply(calculate_health_score, axis=1)
+
+# Latest patient score
+st.subheader("🧠 Patient Health Score")
+
+latest_score = df.iloc[-1]["health_score"]
+
+st.metric("Current Health Score", int(latest_score))
+
+# Visualize Score Trend
+st.subheader("Health Score Trend")
+
+st.line_chart(df.set_index("created_at")["health_score"])
 
 
