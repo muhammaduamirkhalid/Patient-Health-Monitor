@@ -132,4 +132,27 @@ st.subheader("Health Score Trend")
 
 st.line_chart(df.set_index("created_at")["health_score"])
 
+# ===========Trend Intelligence Layer ==============
+
+st.subheader("📈 Health Trend Analysis")
+
+if len(df) > 5:
+
+    recent = df["health_score"].tail(5).mean()
+    previous = df["health_score"].head(5).mean()
+
+    if recent > previous:
+        st.success("📈 Patient condition is IMPROVING")
+    elif recent < previous:
+        st.error("📉 Patient condition is DETERIORATING")
+    else:
+        st.info("➖ Patient condition is STABLE")
+
+# stabilty score
+st.subheader("📊 Stability Index")
+
+stability = 100 - abs(recent - previous)
+
+st.metric("Stability Score", round(stability, 1))
+
 
