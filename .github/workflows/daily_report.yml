@@ -32,4 +32,4 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
 
         run: |
-          python report_generator.py
+          python dashboard/report_generator.py
