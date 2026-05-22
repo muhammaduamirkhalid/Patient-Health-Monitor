@@ -24,6 +24,9 @@ jobs:
         run: |
           pip install pandas supabase requests
 
+      - name: Debug files
+        run: ls -R
+
       # 4️⃣ Run report script
       - name: Run Report Generator
         env:
