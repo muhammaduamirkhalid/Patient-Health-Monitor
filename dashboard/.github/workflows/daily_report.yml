@@ -27,9 +27,9 @@ jobs:
       # 4️⃣ Run report script
       - name: Run Report Generator
         env:
-          SUPABASE_URL: ${{ secrets.https://yvcbuzjryivboukwalyc.supabase.co }}
-          SUPABASE_KEY: ${{ secrets.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2Y2J1empyeWl2Ym91a3dhbHljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDYxNDAsImV4cCI6MjA5NDc4MjE0MH0.1R4XTQhzKUgkbDDLegKyjMLM-JVTk7ScSjvD16m3gWM}}
-          RESEND_API_KEY: ${{ secrets.re_ftfkkW1s_Kjz3zWt3E2mDL6BQ53VeQheJ }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
 
         run: |
           python report_generator.py
