@@ -18,7 +18,7 @@ RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 # 📧 STEP 2: EMAIL CONFIG (CHANGE THIS)
 # 👉 PUT YOUR EMAIL HERE (receiver)
 # ======================================================
-TO_EMAIL = "muhammad.umairkhalid@outlook.com"   # <-- CHANGE THIS
+TO_EMAIL = "pakistanijrl@gmail.com"   # <-- CHANGE THIS
 
 # ======================================================
 # 🔌 CONNECT TO SUPABASE
