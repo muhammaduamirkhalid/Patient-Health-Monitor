@@ -1,17 +1,6 @@
-# ======================================================
-# 📊 DAILY PATIENT HEALTH REPORT AUTOMATION (GITHUB ACTIONS)
-# ======================================================
-
 name: Daily Patient Health Report
 
 on:
-  # Runs automatically every day
-  schedule:
-    # ⏰ TIME (UTC)
-    # 6:00 AM UTC = approx afternoon in Pakistan
-    - cron: "0 6 * * *"
-
-  # Manual run button in GitHub Actions tab
   workflow_dispatch:
 
 jobs:
@@ -20,41 +9,26 @@ jobs:
 
     steps:
 
-      # ======================================================
-      # 1️⃣ GET YOUR REPOSITORY CODE
-      # ======================================================
+      # 1️⃣ Download repository files
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # ======================================================
-      # 2️⃣ SETUP PYTHON ENVIRONMENT
-      # ======================================================
+      # 2️⃣ Setup Python
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      # ======================================================
-      # 3️⃣ INSTALL REQUIRED PACKAGES
-      # ======================================================
+      # 3️⃣ Install packages
       - name: Install Dependencies
         run: |
           pip install pandas supabase requests
 
-      # ======================================================
-      # 4️⃣ RUN YOUR REPORT SCRIPT
-      # ======================================================
+      # 4️⃣ Run report script
       - name: Run Report Generator
         env:
-          # --------------------------------------------------
-          # 🔐 SUPABASE (ADD IN GITHUB SECRETS)
-          # --------------------------------------------------
           SUPABASE_URL: ${{ secrets.https://yvcbuzjryivboukwalyc.supabase.co }}
           SUPABASE_KEY: ${{ secrets.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2Y2J1empyeWl2Ym91a3dhbHljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMDYxNDAsImV4cCI6MjA5NDc4MjE0MH0.1R4XTQhzKUgkbDDLegKyjMLM-JVTk7ScSjvD16m3gWM}}
-
-          # --------------------------------------------------
-          # 📧 EMAIL (RESEND API KEY - ADD IN GITHUB SECRETS)
-          # --------------------------------------------------
           RESEND_API_KEY: ${{ secrets.re_ftfkkW1s_Kjz3zWt3E2mDL6BQ53VeQheJ }}
 
         run: |
