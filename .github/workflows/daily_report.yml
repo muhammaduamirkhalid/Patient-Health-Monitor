@@ -1,4 +1,4 @@
-name: TEST WORKFLOW
+name: TEST RUN
 
 on:
   workflow_dispatch:
@@ -8,11 +8,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Debug folder structure
+      - name: Debug files
         run: ls -R
 
-      - name: Test Python path
+      - name: Run script
         run: python dashboard/report_generator.py
