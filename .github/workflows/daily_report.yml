@@ -1,17 +1,38 @@
-name: TEST RUN
+name: Daily Patient Health Report v2
 
 on:
   workflow_dispatch:
 
 jobs:
-  test:
+  run-report:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
 
-      - name: Debug files
+      # 1️⃣ Checkout repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Setup Python
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      # 3️⃣ Install dependencies
+      - name: Install Dependencies
+        run: |
+          pip install pandas supabase requests
+
+      # 4️⃣ Debug folder structure (IMPORTANT)
+      - name: Debug file structure
         run: ls -R
 
-      - name: Run script
+      # 5️⃣ Run report generator
+      - name: Run Report Generator
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+
         run: python dashboard/report_generator.py
