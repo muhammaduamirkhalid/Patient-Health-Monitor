@@ -3,8 +3,7 @@ name: Daily Patient Health Report v2
 on:
   workflow_dispatch:
   
-schedule:
-    - cron: '0 2 * * *'
+
     
 jobs:
   run-report:
