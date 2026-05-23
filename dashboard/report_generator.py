@@ -83,7 +83,183 @@ Health Score: {latest['health_score']}
 Generated Automatically
 """
 
+# services/email_builder.py
+
+from datetime import datetime
+
+# ---------------------------------------------------------
+# 1. FETCH LATEST MEDICINE BASE (IMPORTANT NEW RULE)
+# ---------------------------------------------------------
+def get_latest_medicine_base(db_session):
+    """
+    Fetch latest entry from Medicine_base table.
+    RULE: Always use latest record only.
+    """
+
+    query = """
+    SELECT *
+    FROM Medicine_base
+    ORDER BY id DESC
+    LIMIT 1
+    """
+
+    result = db_session.execute(query).fetchone()
+    return result
+
+
+# ---------------------------------------------------------
+# 2. BUILD EMAIL HTML
+# ---------------------------------------------------------
+def build_health_email(patient, vitals, medicine_impact, medicine_base):
+
+    now = datetime.now().strftime("%B %d, %Y")
+
+    html = f"""
+    <html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                background-color: #f5f7fb;
+                margin: 0;
+                padding: 0;
+            }}
+            .container {{
+                width: 100%;
+                max-width: 900px;
+                margin: auto;
+                background: white;
+                padding: 20px;
+            }}
+            .header {{
+                background: linear-gradient(90deg, #0b3d91, #1e88e5);
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+            }}
+            .section {{
+                margin-top: 20px;
+                padding: 15px;
+                border-radius: 10px;
+                background: #ffffff;
+                border: 1px solid #e0e0e0;
+            }}
+            .title {{
+                font-size: 18px;
+                font-weight: bold;
+                color: #0b3d91;
+                margin-bottom: 10px;
+            }}
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+            }}
+            th, td {{
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: center;
+            }}
+            th {{
+                background-color: #0b3d91;
+                color: white;
+            }}
+            .good {{
+                color: green;
+                font-weight: bold;
+            }}
+        </style>
+    </head>
+
+    <body>
+    <div class="container">
+
+        <!-- HEADER -->
+        <div class="header">
+            <h2>Health Monitor - Daily Health Report</h2>
+            <p>{now}</p>
+        </div>
+
+        <!-- GREETING SECTION -->
+        <div class="section">
+            <p><b>Hello {patient['name']},</b></p>
+            <p>Your overall health status is: <span class="good">Good</span></p>
+        </div>
+
+        <!-- VITALS SECTION -->
+        <div class="section">
+            <div class="title">Today's Vitals Summary</div>
+            <table>
+                <tr>
+                    <th>Heart Rate</th>
+                    <th>BP</th>
+                    <th>Glucose</th>
+                    <th>SpO2</th>
+                    <th>Temp</th>
+                </tr>
+                <tr>
+                    <td>{vitals['heart_rate']} bpm</td>
+                    <td>{vitals['bp']}</td>
+                    <td>{vitals['glucose']} mg/dL</td>
+                    <td>{vitals['spo2']}%</td>
+                    <td>{vitals['temp']} °F</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- MEDICINE IMPACT -->
+        <div class="section">
+            <div class="title">Medicine Impact Summary</div>
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th>Purpose</th>
+                    <th>Impact</th>
+                    <th>Status</th>
+                </tr>
+                {medicine_impact}
+            </table>
+        </div>
+
+        <!-- NEW: MEDICINE BASE (LATEST ENTRY ONLY) -->
+        <div class="section">
+            <div class="title">Medicine Base (Active Configuration)</div>
+            <table>
+                <tr>
+                    <th>Base Name</th>
+                    <th>Content</th>
+                    <th>Updated At</th>
+                </tr>
+                <tr>
+                    <td>{medicine_base['base_name']}</td>
+                    <td>{medicine_base['content']}</td>
+                    <td>{medicine_base['updated_at']}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="section">
+            <p><b>Tip of the Day:</b> Stay consistent with medication and hydration.</p>
+            <p>This is an automated report. Please do not reply.</p>
+        </div>
+
+    </div>
+    </body>
+    </html>
+    """
+
+    return html
     return report
+    
+    from services.email_builder import build_health_email, get_latest_medicine_base
+    medicine_base = get_latest_medicine_base(db_session)
+
+email_body = build_health_email(
+    patient=patient_data,
+    vitals=vitals_data,
+    medicine_impact=medicine_table_html,
+    medicine_base=medicine_base
+)
 
 # ======================================================
 # 📧 SEND EMAIL USING RESEND API
