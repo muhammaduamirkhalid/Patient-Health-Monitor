@@ -254,12 +254,6 @@ def build_health_email(patient, vitals, medicine_impact, medicine_base):
     from services.email_builder import build_health_email, get_latest_medicine_base
     medicine_base = get_latest_medicine_base(db_session)
 
-email_body = build_health_email(
-    patient=patient_data,
-    vitals=vitals_data,
-    medicine_impact=medicine_table_html,
-    medicine_base=medicine_base
-)
 
 # ======================================================
 # 📧 SEND EMAIL USING RESEND API
