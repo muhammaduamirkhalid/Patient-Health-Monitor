@@ -15,10 +15,9 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 
 # ======================================================
-# 📧 STEP 2: EMAIL CONFIG (CHANGE THIS)
-# 👉 PUT YOUR EMAIL HERE (receiver)
+# 📧 STEP 2: EMAIL CONFIG
 # ======================================================
-TO_EMAIL = "pakistanijrl@gmail.com"   # <-- CHANGE THIS
+TO_EMAIL = "pakistanijrl@gmail.com"
 
 # ======================================================
 # 🔌 CONNECT TO SUPABASE
@@ -39,7 +38,7 @@ def load_data():
     return df
 
 # ======================================================
-# 🧠 SIMPLE HEALTH SCORE (same logic as your dashboard)
+# 🧠 SIMPLE HEALTH SCORE
 # ======================================================
 def calculate_score(row):
     score = 100
@@ -83,11 +82,7 @@ Health Score: {latest['health_score']}
 Generated Automatically
 """
 
-
-
     return report
-    
-
 
 # ======================================================
 # 📧 SEND EMAIL USING RESEND API
@@ -100,8 +95,8 @@ def send_email(report_text):
         "Authorization": f"Bearer {RESEND_API_KEY}",
         "Content-Type": "application/json"
     }
-    
-     html_content = f"""
+
+    html_content = f"""
 <html>
 <body style="font-family: Arial; background:#f4f7fb; padding:20px;">
 
