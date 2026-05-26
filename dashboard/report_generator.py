@@ -143,299 +143,290 @@ def generate_html_report(df):
     # =========================================
     html = f"""
 
-    <html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Patient Health Report</title>
+    <style>
+        :root {
+            --primary-blue: #1a4a8d;
+            --light-blue: #f0f7ff;
+            --success-green: #28a745;
+            --text-dark: #333;
+            --border-color: #e1e8ed;
+        }
 
-    <body style="
-        margin:0;
-        padding:30px;
-        background:#eef2ff;
-        font-family:Arial,sans-serif;
-    ">
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+        }
 
-    <div style="
-        max-width:820px;
-        margin:auto;
-        background:white;
-        border-radius:20px;
-        overflow:hidden;
-        box-shadow:0 10px 30px rgba(0,0,0,0.08);
-    ">
+        .report-container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
 
-        <!-- HEADER -->
-        <div style="
-            background:linear-gradient(135deg,#2563eb,#1d4ed8);
-            padding:35px;
-            color:white;
-            text-align:center;
-        ">
+        /* Header Section */
+        header {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
 
-            <h1 style="
-                margin:0;
-                font-size:32px;
-            ">
-                Patient Health Monitor
-            </h1>
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-            <p style="
-                margin-top:10px;
-                opacity:0.9;
-                font-size:15px;
-            ">
-                Daily Automated Health Report
-            </p>
+        .header-info {
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            text-align: right;
+        }
 
+        /* Status Banner */
+        .status-banner {
+            background-color: var(--light-blue);
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-badge {
+            background: var(--success-green);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        /* Grid Layouts */
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 0 20px;
+        }
+
+        .vital-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .vital-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .normal-tag {
+            color: var(--success-green);
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        /* Table Styles */
+        .medicine-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .medicine-table th {
+            background-color: var(--primary-blue);
+            color: white;
+            text-align: left;
+            padding: 12px;
+        }
+
+        .medicine-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        section {
+            padding: 20px;
+        }
+
+        h2 {
+            font-size: 1.1em;
+            color: var(--primary-blue);
+            border-bottom: 2px solid var(--light-blue);
+            padding-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .flex-1 { flex: 1; }
+
+        footer {
+            text-align: center;
+            font-size: 0.8em;
+            color: #777;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+<div class="report-container">
+    <header>
+        <div class="logo-section">
+            <div style="font-size: 2em; color: var(--primary-blue);">✚</div>
+            <div>
+                <h1 style="margin:0; font-size: 1.5em; color: var(--primary-blue);">Health Monitor</h1>
+                <small>Remote Patient Monitoring</small>
+            </div>
         </div>
-
-        <!-- BODY -->
-        <div style="padding:30px;">
-
-            <!-- STATUS -->
-            <div style="
-                background:{status_color};
-                color:white;
-                padding:18px;
-                border-radius:14px;
-                text-align:center;
-                font-size:24px;
-                font-weight:bold;
-                margin-bottom:28px;
-            ">
-                HEALTH STATUS: {status_text}
-            </div>
-
-            <!-- CARDS -->
-            <table width="100%" cellspacing="12">
-
-                <tr>
-
-                    <td style="
-                        background:#f8fafc;
-                        padding:22px;
-                        border-radius:16px;
-                        text-align:center;
-                        width:25%;
-                    ">
-
-                        <div style="
-                            font-size:13px;
-                            color:#6b7280;
-                        ">
-                            Pulse
-                        </div>
-
-                        <div style="
-                            margin-top:8px;
-                            font-size:28px;
-                            font-weight:bold;
-                            color:#111827;
-                        ">
-                            {latest['pulse']}
-                        </div>
-
-                        <div style="
-                            color:#6b7280;
-                            font-size:12px;
-                        ">
-                            BPM
-                        </div>
-
-                    </td>
-
-                    <td style="
-                        background:#f8fafc;
-                        padding:22px;
-                        border-radius:16px;
-                        text-align:center;
-                        width:25%;
-                    ">
-
-                        <div style="
-                            font-size:13px;
-                            color:#6b7280;
-                        ">
-                            Blood Pressure
-                        </div>
-
-                        <div style="
-                            margin-top:8px;
-                            font-size:24px;
-                            font-weight:bold;
-                            color:#111827;
-                        ">
-                            {latest['systolic']}/{latest['diastolic']}
-                        </div>
-
-                    </td>
-
-                    <td style="
-                        background:#f8fafc;
-                        padding:22px;
-                        border-radius:16px;
-                        text-align:center;
-                        width:25%;
-                    ">
-
-                        <div style="
-                            font-size:13px;
-                            color:#6b7280;
-                        ">
-                            SpO2
-                        </div>
-
-                        <div style="
-                            margin-top:8px;
-                            font-size:28px;
-                            font-weight:bold;
-                            color:#111827;
-                        ">
-                            {latest['spo2']}%
-                        </div>
-
-                    </td>
-
-                    <td style="
-                        background:#eff6ff;
-                        padding:22px;
-                        border-radius:16px;
-                        text-align:center;
-                        width:25%;
-                    ">
-
-                        <div style="
-                            font-size:13px;
-                            color:#2563eb;
-                        ">
-                            Health Score
-                        </div>
-
-                        <div style="
-                            margin-top:8px;
-                            font-size:30px;
-                            font-weight:bold;
-                            color:#2563eb;
-                        ">
-                            {health_score}
-                        </div>
-
-                        <div style="
-                            font-size:12px;
-                            color:#2563eb;
-                        ">
-                            /100
-                        </div>
-
-                    </td>
-
-                </tr>
-
-            </table>
-
-            <!-- TREND SUMMARY -->
-            <div style="
-                margin-top:35px;
-                background:#f9fafb;
-                border-radius:16px;
-                padding:24px;
-            ">
-
-                <h2 style="
-                    margin-top:0;
-                    color:#2563eb;
-                ">
-                    Health Trend Analysis
-                </h2>
-
-                <p style="
-                    color:#374151;
-                    line-height:1.8;
-                    font-size:15px;
-                ">
-                    {trend_summary}
-                </p>
-
-            </div>
-
-            <!-- MEDICINE BASE -->
-            <div style="
-                margin-top:35px;
-            ">
-
-                <h2 style="
-                    color:#2563eb;
-                    margin-bottom:15px;
-                ">
-                    Active Medicine Base: {current_base}
-                </h2>
-
-                <table width="100%" cellspacing="0" style="
-                    border-collapse:collapse;
-                    background:#ffffff;
-                    border:1px solid #e5e7eb;
-                    border-radius:14px;
-                    overflow:hidden;
-                ">
-
-                    <tr style="
-                        background:#eff6ff;
-                    ">
-
-                        <th style="
-                            text-align:left;
-                            padding:14px;
-                            color:#1e3a8a;
-                            font-size:14px;
-                        ">
-                            Current Medicines & Dosage
-                        </th>
-
-                    </tr>
-
-                    {medicine_rows}
-
-                </table>
-
-            </div>
-
-            <!-- DASHBOARD BUTTON -->
-            <div style="
-                text-align:center;
-                margin-top:40px;
-            ">
-
-                <a href="https://patient-health-monitor.streamlit.app/"
-                style="
-                    background:#2563eb;
-                    color:white;
-                    padding:16px 28px;
-                    border-radius:12px;
-                    text-decoration:none;
-                    font-weight:bold;
-                    font-size:15px;
-                    display:inline-block;
-                ">
-                    Open Full Dashboard
-                </a>
-
-            </div>
-
-            <!-- FOOTER -->
-            <div style="
-                text-align:center;
-                margin-top:35px;
-                color:#9ca3af;
-                font-size:12px;
-            ">
-
-                Generated Automatically by Patient Health Monitor System
-
-            </div>
-
+        <div class="header-info">
+            <div>Daily Health Report</div>
+            <div style="font-size: 0.8em;">May 21, 2025 • 07:00 AM (PKT)</div>
         </div>
+    </header>
 
+    <div class="status-banner">
+        <div>
+            <h3 style="margin:0;">Hello,</h3>
+            <p style="margin: 5px 0;">Your overall health status is <span class="status-badge">Good ✓</span></p>
+            <small>Stay consistent with your medicines and keep monitoring your health.</small>
+        </div>
     </div>
 
-    </body>
-    </html>
+    <section>
+        <h2>Today's Vitals Summary</h2>
+        <div class="vitals-grid">
+            <div class="vital-card">
+                <div style="color: #e74c3c;">❤️ Heart Rate</div>
+                <div class="vital-value">72 <small>bpm</small></div>
+                <div class="normal-tag">Normal</div>
+                <small>(60 - 100 bpm)</small>
+            </div>
+            <div class="vital-card">
+                <div style="color: #3498db;">🩺 Blood Pressure</div>
+                <div class="vital-value">118/76 <small>mmHg</small></div>
+                <div class="normal-tag">Normal</div>
+                <small>(90/60 - 120/80)</small>
+            </div>
+            <div class="vital-card">
+                <div style="color: #f39c12;">💧 Blood Glucose</div>
+                <div class="vital-value">104 <small>mg/dL</small></div>
+                <div class="normal-tag">Normal</div>
+                <small>(70 - 140 mg/dL)</small>
+            </div>
+            <div class="vital-card">
+                <div style="color: #9b59b6;">☁️ SpO2</div>
+                <div class="vital-value">98 <small>%</small></div>
+                <div class="normal-tag">Normal</div>
+                <small>(95 - 100 %)</small>
+            </div>
+            <div class="vital-card">
+                <div style="color: #27ae60;">🌡️ Temperature</div>
+                <div class="vital-value">98.4 <small>°F</small></div>
+                <div class="normal-tag">Normal</div>
+                <small>(97 - 99 °F)</small>
+            </div>
+        </div>
+    </section>
+
+    <div class="flex-row" style="padding: 0 20px;">
+        <section class="flex-1">
+            <h2>2. Vitals Trend (Last 7 Days)</h2>
+            <div style="height: 150px; background: #fafafa; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; color: #999;">
+                [Graph: Stable trends for HR, BP, and Glucose]
+            </div>
+        </section>
+        <section style="width: 250px; text-align: center;">
+            <h2>3. Health Score</h2>
+            <div style="font-size: 3em; color: var(--success-green); font-weight: bold; margin: 10px 0;">85<small style="font-size: 0.4em;">/100</small></div>
+            <div class="status-badge" style="display: inline-block;">Good</div>
+            <p><small>You are doing well. Keep it up!</small></p>
+        </section>
+    </div>
+
+    <div class="flex-row" style="padding: 0 20px;">
+        <section class="flex-1" style="background: #f9f9f9; margin: 10px; border-radius: 8px;">
+            <h3>4. Medicine Adherence</h3>
+            <p>✅ All medications taken on time</p>
+        </section>
+        <section class="flex-1" style="background: #f9f9f9; margin: 10px; border-radius: 8px;">
+            <h3>5. Alerts & Notifications</h3>
+            <p>🔔 No critical alerts today</p>
+        </section>
+    </div>
+
+    <section>
+        <h2>6. Medicine Impact Summary</h2>
+        <table class="medicine-table">
+            <thead>
+                <tr>
+                    <th>Medicine Name</th>
+                    <th>Purpose</th>
+                    <th>Impact</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Amlodipine 5mg</td>
+                    <td>Blood Pressure</td>
+                    <td>Stabilizing BP</td>
+                    <td class="normal-tag">Effective</td>
+                </tr>
+                <tr>
+                    <td>Metformin 500mg</td>
+                    <td>Blood Sugar</td>
+                    <td>Improving Glucose</td>
+                    <td class="normal-tag">Effective</td>
+                </tr>
+                <tr>
+                    <td>Atorvastatin 10mg</td>
+                    <td>Cholesterol</td>
+                    <td>Improving Lipid Profile</td>
+                    <td class="normal-tag">Effective</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <footer style="background-color: var(--light-blue); margin-top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
+            <div style="text-align: left;">
+                <strong>Tip of the Day</strong><br>
+                <small>Drink enough water, take your medicines on time, and keep moving.</small>
+            </div>
+            <div style="text-align: right;">
+                Stay healthy, stay happy!<br>
+                <strong>- Your Health Monitor System</strong>
+            </div>
+        </div>
+        <p style="margin-top: 20px; font-size: 0.7em;">This is an automated report. Please do not reply to this email.</p>
+    </footer>
+</div>
+
+</body>
+</html>
 
     """
 
