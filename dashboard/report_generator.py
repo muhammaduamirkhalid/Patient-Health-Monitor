@@ -6,6 +6,7 @@ import os
 import pandas as pd
 import requests
 from supabase import create_client
+from datetime import datetime
 
 # ======================================================
 # 🔐 STEP 1: LOAD SECRETS (FROM GITHUB ACTIONS)
