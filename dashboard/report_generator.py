@@ -57,22 +57,26 @@ def calculate_score(row):
 # ======================================================
 # 📊 GENERATE REPORT TEXT
 # ======================================================
+
 def generate_html_report(df):
 
     if df.empty:
         return "<h1>No patient data available</h1>"
 
-    # Sort latest data
+    # =========================================
+    # SORT DATA
+    # =========================================
     df = df.sort_values("created_at")
 
-    # Calculate health score
+    # =========================================
+    # HEALTH SCORE
+    # =========================================
     df["health_score"] = df.apply(calculate_score, axis=1)
 
-    # Latest patient reading
     latest = df.iloc[-1]
 
     # =========================================
-    # FETCH CURRENT MEDICINE BASE
+    # CURRENT MEDICINE BASE
     # =========================================
     current_base = latest["medicine_base"]
 
@@ -89,18 +93,27 @@ def generate_html_report(df):
     if med_res.data:
         medicines_text = med_res.data[0]["medicines"]
 
-    # Convert comma-separated medicines into table rows
+    # =========================================
+    # MEDICINE TABLE ROWS
+    # =========================================
     medicine_rows = ""
 
     for med in medicines_text.split(","):
+
         medicine_rows += f"""
         <tr>
-            <td style="padding:10px; border:1px solid #ddd;">{med.strip()}</td>
+            <td style="
+                padding:12px;
+                border-bottom:1px solid #e5e7eb;
+                font-size:14px;
+            ">
+                {med.strip()}
+            </td>
         </tr>
         """
 
     # =========================================
-    # HEALTH STATUS COLOR
+    # HEALTH STATUS
     # =========================================
     health_score = latest["health_score"]
 
@@ -117,128 +130,287 @@ def generate_html_report(df):
         status_text = "CRITICAL"
 
     # =========================================
+    # SIMPLE TREND SUMMARY
+    # =========================================
+    trend_summary = f"""
+    Patient vitals were monitored successfully.
+    Current health score indicates {status_text.lower()} condition.
+    Continue observing pulse and blood pressure trends regularly.
+    """
+
+    # =========================================
     # HTML EMAIL TEMPLATE
     # =========================================
     html = f"""
+
     <html>
+
     <body style="
-        font-family: Arial, sans-serif;
-        background:#f4f7fb;
-        padding:20px;
+        margin:0;
+        padding:30px;
+        background:#eef2ff;
+        font-family:Arial,sans-serif;
     ">
 
     <div style="
-        max-width:800px;
+        max-width:820px;
         margin:auto;
         background:white;
-        border-radius:16px;
+        border-radius:20px;
         overflow:hidden;
-        box-shadow:0 4px 12px rgba(0,0,0,0.1);
+        box-shadow:0 10px 30px rgba(0,0,0,0.08);
     ">
 
         <!-- HEADER -->
         <div style="
-            background:#2563eb;
+            background:linear-gradient(135deg,#2563eb,#1d4ed8);
+            padding:35px;
             color:white;
-            padding:30px;
             text-align:center;
         ">
-            <h1>Patient Health Monitor</h1>
-            <p>Daily Automated Health Report</p>
+
+            <h1 style="
+                margin:0;
+                font-size:32px;
+            ">
+                Patient Health Monitor
+            </h1>
+
+            <p style="
+                margin-top:10px;
+                opacity:0.9;
+                font-size:15px;
+            ">
+                Daily Automated Health Report
+            </p>
+
         </div>
 
-        <!-- HEALTH STATUS -->
-        <div style="padding:25px;">
+        <!-- BODY -->
+        <div style="padding:30px;">
 
+            <!-- STATUS -->
             <div style="
                 background:{status_color};
                 color:white;
-                padding:15px;
-                border-radius:12px;
+                padding:18px;
+                border-radius:14px;
                 text-align:center;
-                font-size:22px;
+                font-size:24px;
                 font-weight:bold;
+                margin-bottom:28px;
             ">
-                Health Score: {health_score}/100 — {status_text}
+                HEALTH STATUS: {status_text}
             </div>
 
-            <br>
-
-            <!-- VITALS -->
-            <h2 style="color:#2563eb;">Latest Vitals</h2>
-
-            <table width="100%" cellspacing="0" style="
-                border-collapse:collapse;
-                margin-top:10px;
-            ">
+            <!-- CARDS -->
+            <table width="100%" cellspacing="12">
 
                 <tr>
-                    <td style="padding:12px; border:1px solid #ddd;">
-                        Pulse
+
+                    <td style="
+                        background:#f8fafc;
+                        padding:22px;
+                        border-radius:16px;
+                        text-align:center;
+                        width:25%;
+                    ">
+
+                        <div style="
+                            font-size:13px;
+                            color:#6b7280;
+                        ">
+                            Pulse
+                        </div>
+
+                        <div style="
+                            margin-top:8px;
+                            font-size:28px;
+                            font-weight:bold;
+                            color:#111827;
+                        ">
+                            {latest['pulse']}
+                        </div>
+
+                        <div style="
+                            color:#6b7280;
+                            font-size:12px;
+                        ">
+                            BPM
+                        </div>
+
                     </td>
 
-                    <td style="padding:12px; border:1px solid #ddd;">
-                        {latest['pulse']} BPM
-                    </td>
-                </tr>
+                    <td style="
+                        background:#f8fafc;
+                        padding:22px;
+                        border-radius:16px;
+                        text-align:center;
+                        width:25%;
+                    ">
 
-                <tr>
-                    <td style="padding:12px; border:1px solid #ddd;">
-                        Blood Pressure
+                        <div style="
+                            font-size:13px;
+                            color:#6b7280;
+                        ">
+                            Blood Pressure
+                        </div>
+
+                        <div style="
+                            margin-top:8px;
+                            font-size:24px;
+                            font-weight:bold;
+                            color:#111827;
+                        ">
+                            {latest['systolic']}/{latest['diastolic']}
+                        </div>
+
                     </td>
 
-                    <td style="padding:12px; border:1px solid #ddd;">
-                        {latest['systolic']}/{latest['diastolic']}
-                    </td>
-                </tr>
+                    <td style="
+                        background:#f8fafc;
+                        padding:22px;
+                        border-radius:16px;
+                        text-align:center;
+                        width:25%;
+                    ">
 
-                <tr>
-                    <td style="padding:12px; border:1px solid #ddd;">
-                        SpO2
+                        <div style="
+                            font-size:13px;
+                            color:#6b7280;
+                        ">
+                            SpO2
+                        </div>
+
+                        <div style="
+                            margin-top:8px;
+                            font-size:28px;
+                            font-weight:bold;
+                            color:#111827;
+                        ">
+                            {latest['spo2']}%
+                        </div>
+
                     </td>
 
-                    <td style="padding:12px; border:1px solid #ddd;">
-                        {latest['spo2']}%
+                    <td style="
+                        background:#eff6ff;
+                        padding:22px;
+                        border-radius:16px;
+                        text-align:center;
+                        width:25%;
+                    ">
+
+                        <div style="
+                            font-size:13px;
+                            color:#2563eb;
+                        ">
+                            Health Score
+                        </div>
+
+                        <div style="
+                            margin-top:8px;
+                            font-size:30px;
+                            font-weight:bold;
+                            color:#2563eb;
+                        ">
+                            {health_score}
+                        </div>
+
+                        <div style="
+                            font-size:12px;
+                            color:#2563eb;
+                        ">
+                            /100
+                        </div>
+
                     </td>
+
                 </tr>
 
             </table>
 
-            <br>
+            <!-- TREND SUMMARY -->
+            <div style="
+                margin-top:35px;
+                background:#f9fafb;
+                border-radius:16px;
+                padding:24px;
+            ">
+
+                <h2 style="
+                    margin-top:0;
+                    color:#2563eb;
+                ">
+                    Health Trend Analysis
+                </h2>
+
+                <p style="
+                    color:#374151;
+                    line-height:1.8;
+                    font-size:15px;
+                ">
+                    {trend_summary}
+                </p>
+
+            </div>
 
             <!-- MEDICINE BASE -->
-            <h2 style="color:#2563eb;">
-                Current Medicine Base: {current_base}
-            </h2>
-
-            <table width="100%" cellspacing="0" style="
-                border-collapse:collapse;
-                margin-top:10px;
+            <div style="
+                margin-top:35px;
             ">
 
-                <tr style="background:#eff6ff;">
-                    <th style="padding:12px; border:1px solid #ddd;">
-                        Current Medicines
-                    </th>
-                </tr>
+                <h2 style="
+                    color:#2563eb;
+                    margin-bottom:15px;
+                ">
+                    Active Medicine Base: {current_base}
+                </h2>
 
-                {medicine_rows}
+                <table width="100%" cellspacing="0" style="
+                    border-collapse:collapse;
+                    background:#ffffff;
+                    border:1px solid #e5e7eb;
+                    border-radius:14px;
+                    overflow:hidden;
+                ">
 
-            </table>
+                    <tr style="
+                        background:#eff6ff;
+                    ">
 
-            <br><br>
+                        <th style="
+                            text-align:left;
+                            padding:14px;
+                            color:#1e3a8a;
+                            font-size:14px;
+                        ">
+                            Current Medicines & Dosage
+                        </th>
+
+                    </tr>
+
+                    {medicine_rows}
+
+                </table>
+
+            </div>
 
             <!-- DASHBOARD BUTTON -->
-            <div style="text-align:center;">
+            <div style="
+                text-align:center;
+                margin-top:40px;
+            ">
 
                 <a href="https://patient-health-monitor.streamlit.app/"
                 style="
                     background:#2563eb;
                     color:white;
-                    padding:14px 24px;
+                    padding:16px 28px;
+                    border-radius:12px;
                     text-decoration:none;
-                    border-radius:10px;
                     font-weight:bold;
+                    font-size:15px;
                     display:inline-block;
                 ">
                     Open Full Dashboard
@@ -246,7 +418,17 @@ def generate_html_report(df):
 
             </div>
 
-            <br>
+            <!-- FOOTER -->
+            <div style="
+                text-align:center;
+                margin-top:35px;
+                color:#9ca3af;
+                font-size:12px;
+            ">
+
+                Generated Automatically by Patient Health Monitor System
+
+            </div>
 
         </div>
 
@@ -254,6 +436,7 @@ def generate_html_report(df):
 
     </body>
     </html>
+
     """
 
     return html
