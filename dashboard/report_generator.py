@@ -101,7 +101,7 @@ def send_email(report_text):
         "Content-Type": "application/json"
     }
     
-html_content = f"""
+     html_content = f"""
 <html>
 <body style="font-family: Arial; background:#f4f7fb; padding:20px;">
 
