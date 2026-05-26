@@ -100,12 +100,63 @@ def send_email(report_text):
         "Authorization": f"Bearer {RESEND_API_KEY}",
         "Content-Type": "application/json"
     }
+    
+html_content = f"""
+<html>
+<body style="font-family: Arial; background:#f4f7fb; padding:20px;">
+
+<div style="
+max-width:700px;
+margin:auto;
+background:white;
+padding:30px;
+border-radius:12px;
+box-shadow:0 4px 12px rgba(0,0,0,0.1);
+">
+
+<h1 style="color:#2563eb;">
+Patient Health Monitor
+</h1>
+
+<p style="font-size:16px;">
+Daily automated patient health report.
+</p>
+
+<hr>
+
+<pre style="
+font-size:16px;
+line-height:1.8;
+white-space:pre-wrap;
+">
+{report_text}
+</pre>
+
+<br><br>
+
+<a href="https://patient-health-monitor.streamlit.app/"
+style="
+background:#2563eb;
+color:white;
+padding:12px 20px;
+text-decoration:none;
+border-radius:8px;
+font-weight:bold;
+display:inline-block;
+">
+Open Full Dashboard
+</a>
+
+</div>
+</body>
+</html>
+"""
 
     data = {
         "from": "Health Monitor <onboarding@resend.dev>",
         "to": [TO_EMAIL],
         "subject": "📊 Daily Patient Health Report",
-        "text": report_text
+        "html": html_content
     }
 
     response = requests.post(url, json=data, headers=headers)
