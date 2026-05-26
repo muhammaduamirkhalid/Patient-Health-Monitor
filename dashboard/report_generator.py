@@ -339,7 +339,7 @@ Open Full Dashboard
 if __name__ == "__main__":
 
     df = load_data()
-    report = generate_report(df)
+    report = generate_html_report(df)
 
     print(report)
     send_email(report)
