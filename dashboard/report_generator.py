@@ -57,32 +57,206 @@ def calculate_score(row):
 # ======================================================
 # 📊 GENERATE REPORT TEXT
 # ======================================================
-def generate_report(df):
+def generate_html_report(df):
 
     if df.empty:
-        return "No patient data available"
+        return "<h1>No patient data available</h1>"
 
+    # Sort latest data
     df = df.sort_values("created_at")
+
+    # Calculate health score
     df["health_score"] = df.apply(calculate_score, axis=1)
 
+    # Latest patient reading
     latest = df.iloc[-1]
 
-    report = f"""
-==============================
-DAILY PATIENT HEALTH REPORT
-==============================
+    # =========================================
+    # FETCH CURRENT MEDICINE BASE
+    # =========================================
+    current_base = latest["medicine_base"]
 
-Pulse: {latest['pulse']}
-SpO2: {latest['spo2']}
-Blood Pressure: {latest['systolic']}/{latest['diastolic']}
+    med_res = (
+        supabase
+        .table("medicine_bases")
+        .select("*")
+        .eq("base_name", current_base)
+        .execute()
+    )
 
-Health Score: {latest['health_score']}
+    medicines_text = "No medicines found"
 
-==============================
-Generated Automatically
-"""
+    if med_res.data:
+        medicines_text = med_res.data[0]["medicines"]
 
-    return report
+    # Convert comma-separated medicines into table rows
+    medicine_rows = ""
+
+    for med in medicines_text.split(","):
+        medicine_rows += f"""
+        <tr>
+            <td style="padding:10px; border:1px solid #ddd;">{med.strip()}</td>
+        </tr>
+        """
+
+    # =========================================
+    # HEALTH STATUS COLOR
+    # =========================================
+    health_score = latest["health_score"]
+
+    if health_score >= 80:
+        status_color = "#16a34a"
+        status_text = "STABLE"
+
+    elif health_score >= 60:
+        status_color = "#f59e0b"
+        status_text = "WARNING"
+
+    else:
+        status_color = "#dc2626"
+        status_text = "CRITICAL"
+
+    # =========================================
+    # HTML EMAIL TEMPLATE
+    # =========================================
+    html = f"""
+    <html>
+    <body style="
+        font-family: Arial, sans-serif;
+        background:#f4f7fb;
+        padding:20px;
+    ">
+
+    <div style="
+        max-width:800px;
+        margin:auto;
+        background:white;
+        border-radius:16px;
+        overflow:hidden;
+        box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    ">
+
+        <!-- HEADER -->
+        <div style="
+            background:#2563eb;
+            color:white;
+            padding:30px;
+            text-align:center;
+        ">
+            <h1>Patient Health Monitor</h1>
+            <p>Daily Automated Health Report</p>
+        </div>
+
+        <!-- HEALTH STATUS -->
+        <div style="padding:25px;">
+
+            <div style="
+                background:{status_color};
+                color:white;
+                padding:15px;
+                border-radius:12px;
+                text-align:center;
+                font-size:22px;
+                font-weight:bold;
+            ">
+                Health Score: {health_score}/100 — {status_text}
+            </div>
+
+            <br>
+
+            <!-- VITALS -->
+            <h2 style="color:#2563eb;">Latest Vitals</h2>
+
+            <table width="100%" cellspacing="0" style="
+                border-collapse:collapse;
+                margin-top:10px;
+            ">
+
+                <tr>
+                    <td style="padding:12px; border:1px solid #ddd;">
+                        Pulse
+                    </td>
+
+                    <td style="padding:12px; border:1px solid #ddd;">
+                        {latest['pulse']} BPM
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding:12px; border:1px solid #ddd;">
+                        Blood Pressure
+                    </td>
+
+                    <td style="padding:12px; border:1px solid #ddd;">
+                        {latest['systolic']}/{latest['diastolic']}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding:12px; border:1px solid #ddd;">
+                        SpO2
+                    </td>
+
+                    <td style="padding:12px; border:1px solid #ddd;">
+                        {latest['spo2']}%
+                    </td>
+                </tr>
+
+            </table>
+
+            <br>
+
+            <!-- MEDICINE BASE -->
+            <h2 style="color:#2563eb;">
+                Current Medicine Base: {current_base}
+            </h2>
+
+            <table width="100%" cellspacing="0" style="
+                border-collapse:collapse;
+                margin-top:10px;
+            ">
+
+                <tr style="background:#eff6ff;">
+                    <th style="padding:12px; border:1px solid #ddd;">
+                        Current Medicines
+                    </th>
+                </tr>
+
+                {medicine_rows}
+
+            </table>
+
+            <br><br>
+
+            <!-- DASHBOARD BUTTON -->
+            <div style="text-align:center;">
+
+                <a href="https://patient-health-monitor.streamlit.app/"
+                style="
+                    background:#2563eb;
+                    color:white;
+                    padding:14px 24px;
+                    text-decoration:none;
+                    border-radius:10px;
+                    font-weight:bold;
+                    display:inline-block;
+                ">
+                    Open Full Dashboard
+                </a>
+
+            </div>
+
+            <br>
+
+        </div>
+
+    </div>
+
+    </body>
+    </html>
+    """
+
+    return html
 
 # ======================================================
 # 📧 SEND EMAIL USING RESEND API
