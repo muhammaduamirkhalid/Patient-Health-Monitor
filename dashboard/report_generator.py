@@ -58,278 +58,827 @@ def calculate_score(row):
 # ======================================================
 # 📊 GENERATE REPORT TEXT
 # ======================================================
+def generate_html_report(df):
 
-def generate_html_report(df, TO_EMAIL="patient@example.com"):
-    """Generates a polished, modern HTML health report matching the
-
-    visual design of the Patient Health Monitor dashboard.
-    """
     if df.empty:
         return "<h1>No patient data available</h1>"
 
-    # ==========================================
-    # 1. DATA PREPARATION
-    # ==========================================
-    # Sort chronologically to get the latest reading
-    df_sorted = df.sort_values("created_at")
-    latest = df_sorted.iloc[-1]
+    # =====================================================
+    # SORT DATA
+    # =====================================================
+    df = df.sort_values("created_at")
 
-    # Map current vital signs
-    pulse = latest.get("pulse", "--")
-    spo2 = latest.get("spo2", "--")
-    health_score = latest.get("health_score", 0)
+    # =====================================================
+    # HEALTH SCORE
+    # =====================================================
+    df["health_score"] = df.apply(calculate_score, axis=1)
 
-    # Blood Pressure parsing (handles standard sys/dia splitting if present)
-    bp_sys = latest.get("systolic", "--")
-    bp_dia = latest.get("diastolic", "--")
+    latest = df.iloc[-1]
 
-    # 🩺 TODO: Uncomment these when ready to add Blood Glucose and Temperature
-    # glucose = latest.get('blood_glucose', '--')
-    # temperature = latest.get('temperature', '--')
+    # =====================================================
+    # CURRENT MEDICINE BASE
+    # =====================================================
+    current_base = latest["medicine_base"]
 
-    # Generate live timestamp for report execution
-    # Format: "May 21, 2025 • 07:00 AM (PKT)"
-    current_time_str = datetime.now().strftime("%B %d, %Y • %I:%M %p (PKT)")
+    med_res = (
+        supabase
+        .table("medicine_bases")
+        .select("*")
+        .eq("base_name", current_base)
+        .execute()
+    )
 
-    # ==========================================
-    # 2. DYNAMIC STATUS & ALERTS LOGIC
-    # ==========================================
+    medicines_text = "No medicines found"
+
+    if med_res.data:
+        medicines_text = med_res.data[0]["medicines"]
+
+    # =====================================================
+    # MEDICINE TABLE ROWS
+    # =====================================================
+    medicine_rows = ""
+
+    for med in medicines_text.split(","):
+
+        medicine_rows += f"""
+        <tr>
+            <td style="padding:14px;border-bottom:1px solid #e5e7eb;">
+                {med.strip()}
+            </td>
+
+            <td style="padding:14px;border-bottom:1px solid #e5e7eb;">
+                Monitoring
+            </td>
+
+            <td style="padding:14px;border-bottom:1px solid #e5e7eb;">
+                Effective
+            </td>
+        </tr>
+        """
+
+    # =====================================================
+    # HEALTH STATUS
+    # =====================================================
+    health_score = latest["health_score"]
+
     if health_score >= 80:
+        status_color = "#16a34a"
         status_text = "Good"
-        status_color = "#22c55e"  # Soft Green
-        status_bg = "#dcfce7"  # Light Green Tint
-        status_message = "You are doing well. Keep it up!"
+
     elif health_score >= 60:
-        status_text = "Fair"
-        status_color = "#eab308"  # Amber
-        status_bg = "#fef9c3"
-        status_message = "Vitals are mostly stable. Monitor closely."
+        status_color = "#f59e0b"
+        status_text = "Warning"
+
     else:
+        status_color = "#dc2626"
         status_text = "Critical"
-        status_color = "#dc2626"  # Red
-        status_bg = "#fee2e2"
-        status_message = (
-            "Critical alerts triggered. Please contact your care team."
-        )
 
-    # ==========================================
-    # 3. MEDICINE ROWS FALLBACK
-    # ==========================================
-    # 💊 TODO: Re-integrate your 'medicines_text' processing logic here later.
-    # Currently populates structured mockup rows to preserve UI fidelity.
-    medicine_rows = """
-    <tr style="border-bottom: 1px solid #e2e8f0;">
-        <td style="padding: 12px; font-size: 14px; color: #334155; font-weight: 500;">Amlodipine 5mg</td>
-        <td style="padding: 12px; font-size: 14px; color: #64748b;">Blood Pressure</td>
-        <td style="padding: 12px; font-size: 14px; color: #64748b;">Stabilizing BP</td>
-        <td style="padding: 12px;"><span style="background: #dcfce7; color: #16a34a; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">Effective</span></td>
-    </tr>
-    <tr style="border-bottom: 1px solid #e2e8f0;">
-        <td style="padding: 12px; font-size: 14px; color: #334155; font-weight: 500;">Metformin 500mg</td>
-        <td style="padding: 12px; font-size: 14px; color: #64748b;">Blood Sugar</td>
-        <td style="padding: 12px; font-size: 14px; color: #64748b;">Improving Glucose</td>
-        <td style="padding: 12px;"><span style="background: #dcfce7; color: #16a34a; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">Effective</span></td>
-    </tr>
-    <tr style="border-bottom: 1px solid #e2e8f0;">
-        <td style="padding: 12px; font-size: 14px; color: #334155; font-weight: 500;">Atorvastatin 10mg</td>
-        <td style="padding: 12px; font-size: 14px; color: #64748b;">Cholesterol</td>
-        <td style="padding: 12px; font-size: 14px; color: #64748b;">Improving Lipid Profile</td>
-        <td style="padding: 12px;"><span style="background: #dcfce7; color: #16a34a; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">Effective</span></td>
-    </tr>
-    """
+    # =====================================================
+    # ALERT TEXT
+    # =====================================================
+    alert_text = "No critical alerts today"
 
-    # ==========================================
-    # 4. COMPONENT: TREND CHART FALLBACK
-    # ==========================================
-    # 📈 TODO: Plug in backend matplotlib/plotly image path or external QuickChart URL here.
-    # Currently uses a clean visual placeholder representing the 7-day vitals matrix.
-    chart_placeholder_html = """
-    <div style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 40px 20px; text-align: center; color: #64748b; margin-top: 10px;">
-        <span style="font-size: 24px;">📈</span>
-        <p style="margin: 8px 0 0 0; font-size: 13px; font-weight: 500;">7-Day Vitals Trend Analytics</p>
-        <p style="margin: 2px 0 0 0; font-size: 11px; color: #94a3b8;">(Heart Rate, Blood Pressure, SpO2 Tracking over time)</p>
-    </div>
-    """
+    if latest["spo2"] < 95:
+        alert_text = "SpO2 level below safe threshold"
 
-    # ==========================================
-    # 5. BULLETPROOF HTML EMAIL TEMPLATE
-    # ==========================================
+    if latest["systolic"] > 140:
+        alert_text = "Blood pressure elevated"
+
+    # =====================================================
+    # HTML TEMPLATE
+    # =====================================================
     html = f"""
-    <!DOCTYPE html>
     <html>
-    <head>
-        <meta charset="utf-8">
-        <title>Daily Patient Health Report</title>
-    </head>
-    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b;">
-        
-        <div style="max-width: 760px; margin: 0 auto 10px auto; font-size: 12px; color: #64748b; padding: 0 10px;">
-            <strong>From:</strong> Health Monitor &lt;reports@yourdomain.com&gt;<br>
-            <strong>To:</strong> {TO_EMAIL}<br>
-            <strong>Subject:</strong> Daily Patient Health Report &mdash; {datetime.now().strftime('%B %d, %Y')}
-        </div>
 
-        <div style="max-width: 760px; margin: 0 auto; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e2e8f0;">
-            
-            <table width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, #0284c7, #0369a1); padding: 28px; color: white;">
-                <tr>
-                    <td>
-                        <h1 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.03em;">Health Monitor</h1>
-                        <p style="margin: 4px 0 0 0; font-size: 13px; opacity: 0.9; letter-spacing: 0.02em;">Remote Patient Monitoring</p>
-                    </td>
-                    <td style="text-align: right; vertical-align: middle;">
-                        <div style="background: rgba(255,255,255,0.15); padding: 10px 16px; border-radius: 10px; display: inline-block; text-align: left; border: 1px solid rgba(255,255,255,0.2);">
-                            <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; display: block; opacity: 0.85; margin-bottom: 2px;">Daily Health Report</span>
-                            <span style="font-size: 13px; font-weight: 600; white-space: nowrap;">{current_time_str}</span>
-                        </div>
-                    </td>
-                </tr>
-            </table>
+    <body style="
+        margin:0;
+        padding:30px;
+        background:#f3f4f6;
+        font-family:Arial,sans-serif;
+    ">
 
-            <div style="padding: 32px;">
-                
-                <table width="100%" cellspacing="0" cellpadding="16" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; margin-bottom: 32px;">
-                    <tr>
-                        <td>
-                            <h2 style="margin: 0 0 4px 0; font-size: 16px; color: #166534; font-weight: 700;">Hello,</h2>
-                            <p style="margin: 0; font-size: 14px; color: #334155; line-height: 1.5;">Here is your daily health summary. Your overall health status is <span style="background-color: {status_bg}; color: {status_color}; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 13px; border: 1px solid rgba(0,0,0,0.03); margin-left: 4px;">{status_text} &#10004;</span></p>
-                            <p style="margin: 6px 0 0 0; font-size: 13px; color: #64748b;">Stay consistent with your medicines and keep monitoring your health.</p>
-                        </td>
-                    </tr>
-                </table>
+    <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+    <td align="center">
 
-                <h3 style="font-size: 13px; color: #0369a1; text-transform: uppercase; margin: 0 0 14px 0; letter-spacing: 0.06em; font-weight: 700;">&bull; TODAY'S VITALS SUMMARY</h3>
-                
-                <table width="100%" cellspacing="10" cellpadding="0" style="margin-bottom: 32px; margin-left: -10px; margin-right: -10px;">
-                    <tr>
-                        <td width="20%" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                            <div style="font-size: 12px; color: #64748b; font-weight: 600;">Heart Rate</div>
-                            <div style="font-size: 24px; font-weight: 800; color: #0f172a; margin: 8px 0 6px 0;">{pulse} <span style="font-size: 12px; font-weight: normal; color: #64748b;">bpm</span></div>
-                            <span style="background: #dcfce7; color: #16a34a; font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Normal</span>
-                            <div style="font-size: 11px; color: #94a3b8; margin-top: 8px;">(60 &ndash; 100 bpm)</div>
-                        </td>
-                        
-                        <td width="20%" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                            <div style="font-size: 12px; color: #64748b; font-weight: 600;">Blood Pressure</div>
-                            <div style="font-size: 24px; font-weight: 800; color: #0f172a; margin: 8px 0 6px 0;">{bp_sys}/{bp_dia} <span style="font-size: 11px; font-weight: normal; color: #64748b;">mmHg</span></div>
-                            <span style="background: #dcfce7; color: #16a34a; font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Normal</span>
-                            <div style="font-size: 11px; color: #94a3b8; margin-top: 8px;">(90/60 &ndash; 120/80)</div>
-                        </td>
+    <table width="100%" cellpadding="0" cellspacing="0"
+    style="
+        max-width:1000px;
+        background:white;
+        border-radius:18px;
+        overflow:hidden;
+        box-shadow:0 8px 25px rgba(0,0,0,0.08);
+    ">
 
-                        <td width="20%" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                            <div style="font-size: 12px; color: #64748b; font-weight: 600;">Blood Glucose</div>
-                            <div style="font-size: 24px; font-weight: 800; color: #0f172a; margin: 8px 0 6px 0;">104 <span style="font-size: 11px; font-weight: normal; color: #64748b;">mg/dL</span></div>
-                            <span style="background: #dcfce7; color: #16a34a; font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Normal</span>
-                            <div style="font-size: 11px; color: #94a3b8; margin-top: 8px;">(70 &ndash; 140 mg/dL)</div>
-                        </td>
+    <!-- ================================================= -->
+    <!-- HEADER -->
+    <!-- ================================================= -->
 
-                        <td width="20%" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                            <div style="font-size: 12px; color: #64748b; font-weight: 600;">SpO2</div>
-                            <div style="font-size: 24px; font-weight: 800; color: #0f172a; margin: 8px 0 6px 0;">{spo2} <span style="font-size: 12px; font-weight: normal; color: #64748b;">%</span></div>
-                            <span style="background: #dcfce7; color: #16a34a; font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Normal</span>
-                            <div style="font-size: 11px; color: #94a3b8; margin-top: 8px;">(95 &ndash; 100 %)</div>
-                        </td>
+    <tr>
+    <td>
 
-                        <td width="20%" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                            <div style="font-size: 12px; color: #64748b; font-weight: 600;">Temperature</div>
-                            <div style="font-size: 24px; font-weight: 800; color: #0f172a; margin: 8px 0 6px 0;">98.4 <span style="font-size: 12px; font-weight: normal; color: #64748b;">°F</span></div>
-                            <span style="background: #dcfce7; color: #16a34a; font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Normal</span>
-                            <div style="font-size: 11px; color: #94a3b8; margin-top: 8px;">(97 &ndash; 99 °F)</div>
-                        </td>
-                    </tr>
-                </table>
+    <table width="100%" cellpadding="0" cellspacing="0">
 
-                <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 32px; table-layout: fixed;">
-                    <tr>
-                        <td width="55%" style="vertical-align: top; padding-right: 14px;">
-                            <h3 style="font-size: 13px; color: #0369a1; text-transform: uppercase; margin: 0 0 10px 0; letter-spacing: 0.05em; font-weight: 700;">2. Vitals Trend (Last 7 Days)</h3>
-                            {chart_placeholder_html}
-                        </td>
-                        
-                        <td width="45%" style="vertical-align: top; padding-left: 14px;">
-                            <h3 style="font-size: 13px; color: #0369a1; text-transform: uppercase; margin: 0 0 10px 0; letter-spacing: 0.05em; font-weight: 700;">3. Health Score</h3>
-                            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                                <div style="width: 100px; height: 50px; border-top-left-radius: 100px; border-top-right-radius: 100px; border: 10px solid {status_color}; border-bottom: 0; margin: 5px auto 0 auto; box-sizing: border-box; position: relative;"></div>
-                                <div style="margin-top: -35px;">
-                                    <span style="font-size: 44px; font-weight: 900; color: #0f172a; line-height: 1;">{health_score}</span>
-                                    <span style="font-size: 15px; color: #64748b; font-weight: 600;">/100</span>
-                                </div>
-                                <div style="font-size: 18px; font-weight: 800; color: {status_color}; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.02em;">{status_text}</div>
-                                <p style="font-size: 12px; color: #64748b; margin: 6px 0 0 0;">{status_message}</p>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
+    <tr>
 
-                <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 32px; table-layout: fixed;">
-                    <tr>
-                        <td width="50%" style="padding-right: 10px;">
-                            <h3 style="font-size: 13px; color: #0369a1; text-transform: uppercase; margin: 0 0 12px 0; letter-spacing: 0.05em; font-weight: 700;">4. Medicine Adherence</h3>
-                            <table width="100%" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px;">
-                                <tr>
-                                    <td style="font-size: 14px; color: #14532d; line-height: 1.4;">
-                                        <strong style="font-size: 14px;">&#10004; All medications taken on time</strong><br>
-                                        <span style="font-size: 12px; color: #166534; opacity: 0.9;">Keep following your schedule.</span>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                        
-                        <td width="50%" style="padding-left: 10px;">
-                            <h3 style="font-size: 13px; color: #0369a1; text-transform: uppercase; margin: 0 0 12px 0; letter-spacing: 0.05em; font-weight: 700;">5. Alerts & Notifications</h3>
-                            <table width="100%" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px;">
-                                <tr>
-                                    <td style="font-size: 14px; color: #14532d; line-height: 1.4;">
-                                        <strong style="font-size: 14px;">&#10004; No critical alerts today</strong><br>
-                                        <span style="font-size: 12px; color: #166534; opacity: 0.9;">All vitals are within normal range.</span>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
+        <td width="55%"
+        style="
+            background:#ffffff;
+            padding:30px;
+        ">
 
-                <h3 style="font-size: 13px; color: #0369a1; text-transform: uppercase; margin: 0 0 14px 0; letter-spacing: 0.05em; font-weight: 700;">6. Medicine Impact Summary</h3>
-                <div style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.01);">
-                    <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse: collapse; text-align: left;">
-                        <thead>
-                            <tr style="background: #0369a1; color: #ffffff;">
-                                <th style="padding: 14px 16px; font-size: 13px; font-weight: 600; letter-spacing: 0.02em;">Medicine Name</th>
-                                <th style="padding: 14px 16px; font-size: 13px; font-weight: 600; letter-spacing: 0.02em;">Purpose</th>
-                                <th style="padding: 14px 16px; font-size: 13px; font-weight: 600; letter-spacing: 0.02em;">Impact</th>
-                                <th style="padding: 14px 16px; font-size: 13px; font-weight: 600; letter-spacing: 0.02em;">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {medicine_rows}
-                        </tbody>
-                    </table>
+            <div style="
+                font-size:46px;
+                color:#2563eb;
+                font-weight:bold;
+                display:inline-block;
+                vertical-align:middle;
+            ">
+                ❤
+            </div>
+
+            <div style="
+                display:inline-block;
+                margin-left:14px;
+                vertical-align:middle;
+            ">
+
+                <div style="
+                    font-size:24px;
+                    font-weight:bold;
+                    color:#1d4ed8;
+                ">
+                    Health Monitor
+                </div>
+
+                <div style="
+                    color:#6b7280;
+                    font-size:15px;
+                    margin-top:4px;
+                ">
+                    Remote Patient Monitoring
                 </div>
 
             </div>
 
-            <div style="background: #f8fafc; padding: 24px 32px; border-top: 1px solid #e2e8f0; font-size: 13px;">
-                <table width="100%" cellspacing="0" cellpadding="0">
-                    <tr>
-                        <td style="vertical-align: top;">
-                            <p style="margin: 0 0 4px 0; font-weight: 700; color: #0369a1; font-size: 14px;">💙 Tip of the Day</p>
-                            <p style="margin: 0; color: #64748b; line-height: 1.5; font-size: 13px;">Drink enough water, take your medicines on time, and keep moving. Small steps lead to big results.</p>
-                        </td>
-                        <td style="text-align: right; vertical-align: bottom; width: 40%; white-space: nowrap;">
-                            <span style="color: #4f46e5; font-weight: 700; font-size: 14px; display: block; margin-bottom: 4px;">Stay healthy, stay happy!</span>
-                            <span style="color: #64748b; font-size: 12px;">&mdash; Your Health Monitor System</span>
-                        </td>
-                    </tr>
-                </table>
-                <div style="border-top: 1px solid #e2e8f0; margin-top: 20px; padding-top: 14px; text-align: center; font-size: 11px; color: #94a3b8;">
-                    This is an automated report. Please do not reply to this email.
-                </div>
+        </td>
+
+        <td width="45%"
+        style="
+            background:linear-gradient(135deg,#1d4ed8,#1e3a8a);
+            padding:30px;
+            color:white;
+        ">
+
+            <div style="
+                font-size:30px;
+                margin-bottom:10px;
+            ">
+                📅
             </div>
 
+            <div style="
+                font-size:20px;
+                font-weight:bold;
+            ">
+                Daily Health Report
+            </div>
+
+            <div style="
+                margin-top:10px;
+                opacity:0.95;
+                font-size:15px;
+            ">
+                Automated Monitoring System
+            </div>
+
+        </td>
+
+    </tr>
+
+    </table>
+
+    </td>
+    </tr>
+
+    <!-- ================================================= -->
+    <!-- GREETING SECTION -->
+    <!-- ================================================= -->
+
+    <tr>
+    <td style="padding:22px;">
+
+    <table width="100%" cellpadding="0" cellspacing="0"
+    style="
+        background:#f8fafc;
+        border:1px solid #dbeafe;
+        border-radius:16px;
+    ">
+
+    <tr>
+
+        <td style="padding:28px;">
+
+            <div style="
+                font-size:28px;
+                font-weight:bold;
+                color:#1e3a8a;
+                margin-bottom:16px;
+            ">
+                Hello,
+            </div>
+
+            <div style="
+                font-size:18px;
+                color:#374151;
+                line-height:1.8;
+            ">
+                Here is your daily health summary.
+                Your overall health status is
+                <span style="
+                    background:#dcfce7;
+                    color:#15803d;
+                    padding:8px 14px;
+                    border-radius:10px;
+                    font-weight:bold;
+                    margin-left:6px;
+                ">
+                    {status_text}
+                </span>
+            </div>
+
+            <div style="
+                margin-top:18px;
+                color:#4b5563;
+                font-size:15px;
+            ">
+                Stay consistent with your medicines and keep monitoring your health.
+            </div>
+
+        </td>
+
+        <td width="120" align="center">
+
+            <div style="
+                font-size:72px;
+                color:#60a5fa;
+            ">
+                🛡
+            </div>
+
+        </td>
+
+    </tr>
+
+    </table>
+
+    </td>
+    </tr>
+
+    <!-- ================================================= -->
+    <!-- VITALS SECTION -->
+    <!-- ================================================= -->
+
+    <tr>
+    <td style="padding:0 22px 22px 22px;">
+
+    <div style="
+        font-size:30px;
+        font-weight:bold;
+        color:#1e3a8a;
+        margin-bottom:22px;
+    ">
+        Today's Vitals Summary
+    </div>
+
+    <table width="100%" cellpadding="10" cellspacing="0">
+
+    <tr>
+
+    <!-- HEART RATE -->
+
+    <td width="33%">
+
+    <table width="100%" cellpadding="0" cellspacing="0"
+    style="
+        background:white;
+        border:1px solid #e5e7eb;
+        border-radius:16px;
+    ">
+
+    <tr>
+    <td style="padding:22px;text-align:center;">
+
+        <div style="font-size:42px;">❤</div>
+
+        <div style="
+            margin-top:10px;
+            color:#6b7280;
+            font-size:16px;
+        ">
+            Heart Rate
         </div>
+
+        <div style="
+            margin-top:18px;
+            font-size:42px;
+            font-weight:bold;
+            color:#111827;
+        ">
+            {latest['pulse']}
+        </div>
+
+        <div style="
+            margin-top:6px;
+            color:#6b7280;
+            font-size:16px;
+        ">
+            bpm
+        </div>
+
+        <div style="
+            margin-top:18px;
+            display:inline-block;
+            background:#dcfce7;
+            color:#15803d;
+            padding:8px 16px;
+            border-radius:10px;
+            font-weight:bold;
+        ">
+            Normal
+        </div>
+
+        <div style="
+            margin-top:14px;
+            color:#6b7280;
+            font-size:14px;
+        ">
+            (60 – 100 bpm)
+        </div>
+
+    </td>
+    </tr>
+
+    </table>
+
+    </td>
+
+    <!-- BLOOD PRESSURE -->
+
+    <td width="33%">
+
+    <table width="100%" cellpadding="0" cellspacing="0"
+    style="
+        background:white;
+        border:1px solid #e5e7eb;
+        border-radius:16px;
+    ">
+
+    <tr>
+    <td style="padding:22px;text-align:center;">
+
+        <div style="font-size:42px;">🩺</div>
+
+        <div style="
+            margin-top:10px;
+            color:#6b7280;
+            font-size:16px;
+        ">
+            Blood Pressure
+        </div>
+
+        <div style="
+            margin-top:18px;
+            font-size:36px;
+            font-weight:bold;
+            color:#111827;
+        ">
+            {latest['systolic']}/{latest['diastolic']}
+        </div>
+
+        <div style="
+            margin-top:6px;
+            color:#6b7280;
+            font-size:16px;
+        ">
+            mmHg
+        </div>
+
+        <div style="
+            margin-top:18px;
+            display:inline-block;
+            background:#dcfce7;
+            color:#15803d;
+            padding:8px 16px;
+            border-radius:10px;
+            font-weight:bold;
+        ">
+            Normal
+        </div>
+
+        <div style="
+            margin-top:14px;
+            color:#6b7280;
+            font-size:14px;
+        ">
+            (90/60 – 120/80)
+        </div>
+
+    </td>
+    </tr>
+
+    </table>
+
+    </td>
+
+    <!-- SPO2 -->
+
+    <td width="33%">
+
+    <table width="100%" cellpadding="0" cellspacing="0"
+    style="
+        background:white;
+        border:1px solid #e5e7eb;
+        border-radius:16px;
+    ">
+
+    <tr>
+    <td style="padding:22px;text-align:center;">
+
+        <div style="font-size:42px;">🫁</div>
+
+        <div style="
+            margin-top:10px;
+            color:#6b7280;
+            font-size:16px;
+        ">
+            SpO2
+        </div>
+
+        <div style="
+            margin-top:18px;
+            font-size:42px;
+            font-weight:bold;
+            color:#111827;
+        ">
+            {latest['spo2']}
+        </div>
+
+        <div style="
+            margin-top:6px;
+            color:#6b7280;
+            font-size:16px;
+        ">
+            %
+        </div>
+
+        <div style="
+            margin-top:18px;
+            display:inline-block;
+            background:#dcfce7;
+            color:#15803d;
+            padding:8px 16px;
+            border-radius:10px;
+            font-weight:bold;
+        ">
+            Normal
+        </div>
+
+        <div style="
+            margin-top:14px;
+            color:#6b7280;
+            font-size:14px;
+        ">
+            (95 – 100%)
+        </div>
+
+    </td>
+    </tr>
+
+    </table>
+
+    </td>
+
+    </tr>
+
+    </table>
+
+    <!-- ================================================= -->
+    <!-- FUTURE CARDS -->
+    <!-- ================================================= -->
+
+    <!--
+    ADD GLUCOSE CARD HERE LATER
+    ADD TEMPERATURE CARD HERE LATER
+    -->
+
+    </td>
+    </tr>
+
+    <!-- ================================================= -->
+    <!-- HEALTH SCORE + ALERTS -->
+    <!-- ================================================= -->
+
+    <tr>
+    <td style="padding:0 22px 22px 22px;">
+
+    <table width="100%" cellpadding="12" cellspacing="0">
+
+    <tr>
+
+    <!-- HEALTH SCORE -->
+
+    <td width="50%">
+
+    <table width="100%" cellpadding="0" cellspacing="0"
+    style="
+        background:white;
+        border:1px solid #e5e7eb;
+        border-radius:16px;
+    ">
+
+    <tr>
+    <td style="padding:30px;text-align:center;">
+
+        <div style="
+            font-size:26px;
+            font-weight:bold;
+            color:#1e3a8a;
+            margin-bottom:24px;
+        ">
+            Health Score
+        </div>
+
+        <div style="
+            width:180px;
+            height:180px;
+            border-radius:50%;
+            border:18px solid #22c55e;
+            margin:auto;
+            line-height:145px;
+            font-size:58px;
+            font-weight:bold;
+            color:#111827;
+        ">
+            {health_score}
+        </div>
+
+        <div style="
+            margin-top:20px;
+            color:#16a34a;
+            font-size:36px;
+            font-weight:bold;
+        ">
+            {status_text}
+        </div>
+
+    </td>
+    </tr>
+
+    </table>
+
+    </td>
+
+    <!-- ALERTS -->
+
+    <td width="50%">
+
+    <table width="100%" cellpadding="0" cellspacing="0"
+    style="
+        background:white;
+        border:1px solid #e5e7eb;
+        border-radius:16px;
+    ">
+
+    <tr>
+    <td style="padding:30px;">
+
+        <div style="
+            font-size:26px;
+            font-weight:bold;
+            color:#1e3a8a;
+            margin-bottom:26px;
+        ">
+            Alerts & Notifications
+        </div>
+
+        <table width="100%" cellpadding="0" cellspacing="0"
+        style="
+            background:#f0fdf4;
+            border:1px solid #bbf7d0;
+            border-radius:14px;
+        ">
+
+        <tr>
+
+            <td width="70" align="center"
+            style="padding:20px;font-size:42px;">
+                ✔
+            </td>
+
+            <td style="padding:20px;">
+
+                <div style="
+                    font-size:20px;
+                    font-weight:bold;
+                    color:#166534;
+                ">
+                    {alert_text}
+                </div>
+
+                <div style="
+                    margin-top:10px;
+                    color:#4b5563;
+                    font-size:15px;
+                ">
+                    All vitals are being monitored continuously.
+                </div>
+
+            </td>
+
+        </tr>
+
+        </table>
+
+    </td>
+    </tr>
+
+    </table>
+
+    </td>
+
+    </tr>
+
+    </table>
+
+    </td>
+    </tr>
+
+    <!-- ================================================= -->
+    <!-- MEDICINE TABLE -->
+    <!-- ================================================= -->
+
+    <tr>
+    <td style="padding:0 22px 22px 22px;">
+
+    <div style="
+        font-size:30px;
+        font-weight:bold;
+        color:#1e3a8a;
+        margin-bottom:18px;
+    ">
+        Medicine Impact Summary
+    </div>
+
+    <table width="100%" cellpadding="0" cellspacing="0"
+    style="
+        border-collapse:collapse;
+        background:white;
+        border:1px solid #e5e7eb;
+        border-radius:16px;
+        overflow:hidden;
+    ">
+
+    <tr style="
+        background:#1d4ed8;
+        color:white;
+    ">
+
+        <th style="padding:16px;text-align:left;">
+            Medicine Name
+        </th>
+
+        <th style="padding:16px;text-align:left;">
+            Purpose
+        </th>
+
+        <th style="padding:16px;text-align:left;">
+            Status
+        </th>
+
+    </tr>
+
+    {medicine_rows}
+
+    </table>
+
+    </td>
+    </tr>
+
+    <!-- ================================================= -->
+    <!-- DASHBOARD BUTTON -->
+    <!-- ================================================= -->
+
+    <tr>
+    <td align="center" style="padding:10px 20px 30px 20px;">
+
+    <a href="https://patient-health-monitor.streamlit.app/"
+    style="
+        background:#2563eb;
+        color:white;
+        padding:18px 34px;
+        border-radius:14px;
+        text-decoration:none;
+        font-size:18px;
+        font-weight:bold;
+        display:inline-block;
+    ">
+        Open Full Dashboard
+    </a>
+
+    </td>
+    </tr>
+
+    <!-- ================================================= -->
+    <!-- FOOTER -->
+    <!-- ================================================= -->
+
+    <tr>
+    <td style="padding:0 22px 30px 22px;">
+
+    <table width="100%" cellpadding="0" cellspacing="0"
+    style="
+        background:#eff6ff;
+        border-radius:16px;
+    ">
+
+    <tr>
+
+        <td style="padding:24px;">
+
+            <div style="
+                font-size:26px;
+                color:#2563eb;
+                margin-bottom:12px;
+            ">
+                💙 Tip of the Day
+            </div>
+
+            <div style="
+                color:#4b5563;
+                font-size:16px;
+                line-height:1.8;
+            ">
+                Drink enough water, take your medicines on time,
+                and keep moving. Small steps lead to big results.
+            </div>
+
+        </td>
+
+        <td width="260" style="padding:24px;">
+
+            <div style="
+                font-size:28px;
+                font-weight:bold;
+                color:#1d4ed8;
+                margin-bottom:10px;
+            ">
+                Stay healthy, stay happy!
+            </div>
+
+            <div style="
+                color:#111827;
+                font-size:18px;
+            ">
+                — Your Health Monitor System
+            </div>
+
+        </td>
+
+    </tr>
+
+    </table>
+
+    </td>
+    </tr>
+
+    <!-- ================================================= -->
+    <!-- FINAL FOOTER -->
+    <!-- ================================================= -->
+
+    <tr>
+    <td align="center"
+    style="
+        padding-bottom:30px;
+        color:#9ca3af;
+        font-size:14px;
+    ">
+
+    This is an automated report. Please do not reply to this email.
+
+    </td>
+    </tr>
+
+    </table>
+
+    </td>
+    </tr>
+    </table>
+
     </body>
     </html>
     """
+
     return html
 # ======================================================
 # 📧 SEND EMAIL USING RESEND API
