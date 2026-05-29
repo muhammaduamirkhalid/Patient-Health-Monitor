@@ -435,4 +435,4 @@ if __name__ == "__main__":
     image_path = generate_html_report(df)
 
     send_email(image_path)
-```
+    
