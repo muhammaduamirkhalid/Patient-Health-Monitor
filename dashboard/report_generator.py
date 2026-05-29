@@ -1,4 +1,4 @@
-```python
+
 # ======================================================
 # 📊 PATIENT HEALTH REPORT GENERATOR
 # IMAGE BASED VERSION
