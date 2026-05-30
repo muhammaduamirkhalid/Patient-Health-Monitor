@@ -20,7 +20,7 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 
-TO_EMAIL = "muhammad.umairkhalid299@gmail.com"
+TO_EMAIL = "pakistanijrl@gmail.com"
 
 # ======================================================
 # 🔌 CONNECT SUPABASE
