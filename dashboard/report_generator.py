@@ -409,8 +409,9 @@ def send_email(image_path):
     files = {
         "attachments": open(image_path, "rb")
     }
+    
     with open(image_path, "rb") as f:
-    image_content = base64.b64encode(f.read()).decode("utf-8")
+        image_content = base64.b64encode(f.read()).decode("utf-8")
     
     data = {
     "from": "Health Monitor <onboarding@resend.dev>",
