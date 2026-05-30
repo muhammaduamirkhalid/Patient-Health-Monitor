@@ -12,6 +12,9 @@ import matplotlib.pyplot as plt
 from supabase import create_client
 from matplotlib.patches import FancyBboxPatch
 
+import base64
+import mimetypes
+
 # ======================================================
 # 🔐 LOAD ENV VARIABLES
 # ======================================================
@@ -406,13 +409,34 @@ def send_email(image_path):
     files = {
         "attachments": open(image_path, "rb")
     }
-
+    with open(image_path, "rb") as f:
+    image_content = base64.b64encode(f.read()).decode("utf-8")
+    
     data = {
-        "from": "Health Monitor <onboarding@resend.dev>",
-        "to": [TO_EMAIL],
-        "subject": "📊 Daily Patient Health Report",
-        "html": html
-    }
+    "from": "Health Monitor <onboarding@resend.dev>",
+    "to": [TO_EMAIL],
+    "subject": "📊 Daily Patient Health Report",
+
+    "html": """
+    <h2>Daily Patient Health Report</h2>
+
+    <p>
+    The dashboard report is attached to this email.
+    </p>
+
+    <p>
+    Dashboard:
+    https://patient-health-monitor.streamlit.app/
+    </p>
+    """,
+
+    "attachments": [
+        {
+            "filename": "health_report.png",
+            "content": image_content
+        }
+    ]
+}
 
     response = requests.post(
     url,
@@ -432,6 +456,6 @@ if __name__ == "__main__":
     df = load_data()
 
     image_path = generate_html_report(df)
-
+    print("Generated image:", image_path)
     send_email(image_path)
     
