@@ -5,3 +5,5 @@ supabase
 requests
 matplotlib
 pillow
+base64
+mimetypes
