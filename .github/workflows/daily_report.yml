@@ -24,7 +24,7 @@ jobs:
       # 3️⃣ Install dependencies
       - name: Install Dependencies
         run: |
-          pip install pandas supabase requests matplotlib pillow
+          pip install pandas supabase requests matplotlib pillow base64 mimetypes
 
       # 4️⃣ Debug folder structure (IMPORTANT)
       - name: Debug file structure
