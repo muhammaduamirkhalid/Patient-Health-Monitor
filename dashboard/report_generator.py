@@ -415,11 +415,10 @@ def send_email(image_path):
     }
 
     response = requests.post(
-        url,
-        headers=headers,
-        data=data,
-        files=files
-    )
+    url,
+    json=data,
+    headers=headers
+)
 
     print("Email Status:", response.status_code)
     print("Response:", response.text)
